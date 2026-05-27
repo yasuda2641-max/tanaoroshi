@@ -27,7 +27,8 @@ export default function CreatePage() {
   const previewCount = type === 'focused' ? Math.floor(csvRows.length * 0.6) : csvRows.length;
 
   async function handleCsvFile(file: File) {
-    const text = await file.text();
+    const buffer = await file.arrayBuffer();
+    const text = new TextDecoder('shift-jis').decode(buffer);
     const rows = parseMasterCsv(text);
     setCsvRows(rows);
     setCsvName(file.name);

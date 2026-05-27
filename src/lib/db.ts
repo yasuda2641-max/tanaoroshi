@@ -31,13 +31,11 @@ export async function createSession(
   data: Omit<InventorySession, 'id' | 'token' | 'createdAt' | 'totalItems' | 'completedItems'>
 ): Promise<string> {
   const token = generateToken();
-  const ref = await addDoc(collection(db, COL_SESSIONS), {
-    ...data,
-    token,
-    totalItems: 0,
-    completedItems: 0,
-    createdAt: serverTimestamp(),
-  });
+  const payload = Object.fromEntries(
+    Object.entries({ ...data, token, totalItems: 0, completedItems: 0, createdAt: serverTimestamp() })
+      .filter(([, v]) => v !== undefined)
+  );
+  const ref = await addDoc(collection(db, COL_SESSIONS), payload);
   return ref.id;
 }
 

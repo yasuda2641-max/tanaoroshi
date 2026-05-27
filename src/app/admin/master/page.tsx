@@ -28,7 +28,8 @@ export default function MasterPage() {
   }, [selectedId]);
 
   async function handleFile(file: File) {
-    const text = await file.text();
+    const buffer = await file.arrayBuffer();
+    const text = new TextDecoder('shift-jis').decode(buffer);
     setCsvRows(parseMasterCsv(text));
     setCsvName(file.name);
   }
