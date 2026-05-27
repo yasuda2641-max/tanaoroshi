@@ -8,7 +8,7 @@ import {
   Textarea, Loading, EmptyState, Alert
 } from '@/components/ui';
 
-type Filter = 'all' | 'plus' | 'minus' | 'nocomment';
+type Filter = 'all' | 'plus' | 'minus' | 'nocomment' | 'added';
 
 const CAUSE_OPTIONS = [
   '計数ミス（再カウント済）',
@@ -60,10 +60,13 @@ function ReportContent() {
   const diffRecords = records.filter(r => r.hasDiff || r.actualQty === 0);
   const noComment   = diffRecords.filter(r => r.hasDiff && !r.comment);
 
+  const addedRecords = records.filter(r => r.isAdded);
+
   const filtered = diffRecords.filter(r => {
     if (filter === 'plus')      return r.diff > 0;
     if (filter === 'minus')     return r.diff < 0;
     if (filter === 'nocomment') return r.hasDiff && !r.comment;
+    if (filter === 'added')     return r.isAdded;
     return true;
   });
 
@@ -149,6 +152,7 @@ function ReportContent() {
             ['plus',      `数量超過（${diffRecords.filter(r=>r.diff>0).length}）`],
             ['minus',     `数量不足（${diffRecords.filter(r=>r.diff<0).length}）`],
             ['nocomment', `コメント未記入（${noComment.length}）`],
+            ['added',     `追加商品（${addedRecords.length}）`],
           ] as [Filter, string][]).map(([f, label]) => (
             <button
               key={f}
@@ -186,7 +190,14 @@ function ReportContent() {
                       <tr key={r.id} className={`border-b border-stone-100 hover:bg-stone-50 ${r.recountOk ? 'bg-emerald-50/50' : ''}`}>
                         <td className="px-3 py-3 font-mono text-xs text-stone-600">{r.location}</td>
                         <td className="px-3 py-3 font-mono text-xs text-stone-600">{r.productCd}</td>
-                        <td className="px-3 py-3 text-stone-800 max-w-[180px] truncate" title={r.productName}>{r.productName}</td>
+                        <td className="px-3 py-3 text-stone-800 max-w-[180px]">
+                          <div className="flex items-center gap-1.5">
+                            {r.isAdded && (
+                              <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">追加</span>
+                            )}
+                            <span className="truncate" title={r.productName}>{r.productName}</span>
+                          </div>
+                        </td>
                         <td className="px-3 py-3 text-right text-stone-600">{r.systemQty}</td>
                         <td className="px-3 py-3 text-right font-semibold text-stone-900">{r.actualQty}</td>
                         <td className="px-3 py-3 text-center"><DiffValue diff={r.diff} /></td>
