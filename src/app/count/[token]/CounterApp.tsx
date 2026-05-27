@@ -120,7 +120,6 @@ export default function CounterApp({ token }: { token: string }) {
   }
 
   async function submitItem() {
-    if (!countState.scanned) { setError('バーコードをスキャンしてください'); return; }
     if (!countState.qty) { setError('数量を入力してください'); return; }
     if (!currentItem || !session) return;
     setSubmitting(true);
@@ -320,20 +319,6 @@ export default function CounterApp({ token }: { token: string }) {
               <p className="text-xs text-stone-400">{currentItem.location}</p>
               <h1 className="text-base font-bold leading-tight">{currentItem.productName}</h1>
               <p className="text-xs text-stone-400 mt-0.5">商品CD: {currentItem.productCd}</p>
-            </div>
-
-            {/* スキャン */}
-            <div
-              onClick={() => setCountState(prev => ({ ...prev, scanned: true }))}
-              className={`rounded-xl p-4 text-center mb-4 border-2 cursor-pointer transition-all
-                ${countState.scanned
-                  ? 'border-emerald-400 bg-emerald-50'
-                  : 'border-dashed border-stone-300 bg-stone-50 hover:border-[#4A7A5A]'}`}
-            >
-              <div className="text-3xl mb-1">{countState.scanned ? '✅' : '📷'}</div>
-              <p className={`text-sm font-medium ${countState.scanned ? 'text-emerald-700' : 'text-stone-500'}`}>
-                {countState.scanned ? 'スキャン確認済み' : 'バーコードをスキャン（タップで確認）'}
-              </p>
             </div>
 
             {/* 数量表示 */}
