@@ -205,6 +205,10 @@ export async function updateComment(recordId: string, causeCategory: string, com
   await updateDoc(doc(db, COL_COUNTS, recordId), { causeCategory, comment });
 }
 
+export async function updateRecountOk(recordId: string, recountOk: boolean): Promise<void> {
+  await updateDoc(doc(db, COL_COUNTS, recordId), { recountOk });
+}
+
 // ── CSV パーサー ─────────────────────────────────
 
 export function parseMasterCsv(text: string): Array<{

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { listSessions, getCountRecords, updateComment } from '@/lib/db';
+import { listSessions, getCountRecords, updateComment, updateRecountOk } from '@/lib/db';
 import type { InventorySession, CountRecord } from '@/types';
 import {
   Badge, Button, Card, Select, StatCard, Modal,
@@ -84,9 +84,17 @@ function ReportContent() {
     setModalRec(null);
   }
 
+  async function toggleRecountOk(rec: CountRecord) {
+    const newVal = !rec.recountOk;
+    await updateRecountOk(rec.id, newVal);
+    setRecords(prev => prev.map(r => r.id === rec.id ? { ...r, recountOk: newVal } : r));
+  }
+
   function exportCsv() {
+    const okRecords = diffRecords.filter(r => r.recountOk);
+    if (okRecords.length === 0) { alert('リカウントOKの件数が0件です。'); return; }
     const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,担当者,原因カテゴリ,原因コメント\n';
-    const rows = diffRecords.map(r => {
+    const rows = okRecords.map(r => {
       return [r.location, r.productCd, `"${r.productName}"`, r.systemQty, r.actualQty,
               r.diff, r.staffName, r.causeCategory ?? '', `"${r.comment ?? ''}"`].join(',');
     }).join('\n');
@@ -116,7 +124,7 @@ function ReportContent() {
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </Select>
-          <Button onClick={exportCsv} disabled={diffRecords.length === 0}>⬇ CSV</Button>
+          <Button onClick={exportCsv} disabled={diffRecords.length === 0}>⬇ CSV（リカウントOKのみ）</Button>
         </div>
       </div>
 
@@ -161,7 +169,7 @@ function ReportContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','担当者','原因コメント',''].map(h => (
+                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','担当者','原因コメント','リカウントOK',''].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -170,7 +178,7 @@ function ReportContent() {
                   {filtered.map(r => {
                     const rate = r.systemQty > 0 ? ((r.diff / r.systemQty) * 100).toFixed(1) : '-';
                     return (
-                      <tr key={r.id} className="border-b border-stone-100 hover:bg-stone-50">
+                      <tr key={r.id} className={`border-b border-stone-100 hover:bg-stone-50 ${r.recountOk ? 'bg-emerald-50/50' : ''}`}>
                         <td className="px-3 py-3 font-mono text-xs text-stone-600">{r.location}</td>
                         <td className="px-3 py-3 font-mono text-xs text-stone-600">{r.productCd}</td>
                         <td className="px-3 py-3 text-stone-800 max-w-[180px] truncate" title={r.productName}>{r.productName}</td>
@@ -183,6 +191,15 @@ function ReportContent() {
                             ? <span className="text-xs text-stone-700 line-clamp-2">{r.comment}</span>
                             : <span className="text-xs text-stone-400">未記入</span>
                           }
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <button
+                            onClick={() => toggleRecountOk(r)}
+                            className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all
+                              ${r.recountOk ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-stone-300 bg-white'}`}
+                          >
+                            {r.recountOk && <span className="text-xs font-bold">✓</span>}
+                          </button>
                         </td>
                         <td className="px-3 py-3">
                           <Button size="sm" onClick={() => openComment(r)}>コメント</Button>

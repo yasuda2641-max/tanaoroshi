@@ -51,6 +51,7 @@ export interface CountRecord {
   comment?: string;       // 差異原因コメント
   causeCategory?: string;
   isRecounted?: boolean;  // リカウント済み
+  recountOk?: boolean;    // 管理者リカウントOK確認済み
 }
 
 export interface ShelfProgress {
