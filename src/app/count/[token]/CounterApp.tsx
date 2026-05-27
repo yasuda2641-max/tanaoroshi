@@ -288,7 +288,7 @@ export default function CounterApp({ token }: { token: string }) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.productName}</p>
                       <p className="text-xs text-stone-400">{item.location} ／ {item.productCd}</p>
-                      {item.expiryDate && <p className="text-xs text-amber-600">期限: {item.expiryDate}{item.lotNumber ? ` ／ ロット: ${item.lotNumber}` : ''}</p>}
+                      {item.expiryDate && <p className="text-xs text-amber-600">期限: {item.expiryDate}</p>}
                     </div>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded
                       ${done ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>
@@ -320,7 +320,7 @@ export default function CounterApp({ token }: { token: string }) {
               <h1 className="text-base font-bold leading-tight">{currentItem.productName}</h1>
               <p className="text-xs text-stone-400 mt-0.5">商品CD: {currentItem.productCd}</p>
               {currentItem.expiryDate && (
-                <p className="text-sm font-semibold text-amber-600 mt-1">出荷期限日: {currentItem.expiryDate}{currentItem.lotNumber ? ` ／ ロット: ${currentItem.lotNumber}` : ''}</p>
+                <p className="text-sm font-semibold text-amber-600 mt-1">出荷期限日: {currentItem.expiryDate}</p>
               )}
               <a
                 href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
