@@ -323,9 +323,9 @@ export default function CounterApp({ token }: { token: string }) {
                 href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{display: 'inline-block', marginTop: '6px', fontSize: '12px', color: '#4A7A5A', textDecoration: 'underline'}}
+                style={{display: 'inline-block', marginTop: '6px', fontSize: '12px', color: '#4A7A5A', textDecoration: 'underline', wordBreak: 'break-all'}}
               >
-                📷 オーダリーで写真を確認
+                {`https://orderie.jp/component/g/g${currentItem.productCd}`}
               </a>
             </div>
 
