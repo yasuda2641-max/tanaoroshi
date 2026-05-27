@@ -49,7 +49,7 @@ export default function CounterApp({ token }: { token: string }) {
   const [error, setError]             = useState('');
 
   // 商品追加フォーム
-  const [addForm, setAddForm] = useState({ productCd: '', productName: '', qty: '' });
+  const [addForm, setAddForm] = useState({ location: '', productCd: '', productName: '', qty: '' });
   const [addError, setAddError] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -276,7 +276,7 @@ export default function CounterApp({ token }: { token: string }) {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setAddForm({ productCd: '', productName: '', qty: '' }); setAddError(''); setScreen('add-product'); }}
+                  onClick={() => { setAddForm({ location: shelfKey, productCd: '', productName: '', qty: '' }); setAddError(''); setScreen('add-product'); }}
                   className="px-3 py-1.5 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-lg"
                 >
                   ＋ 商品追加
@@ -425,7 +425,16 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
             <div className="space-y-4">
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD *</label>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>ロケーション ※</label>
+                <input
+                  value={addForm.location}
+                  onChange={e => setAddForm(p => ({...p, location: e.target.value}))}
+                  placeholder="例: 2X-13-05-2-3"
+                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD / 識別CD ※</label>
                 <input
                   value={addForm.productCd}
                   onChange={e => setAddForm(p => ({...p, productCd: e.target.value}))}
@@ -434,7 +443,7 @@ export default function CounterApp({ token }: { token: string }) {
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品名 *</label>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品名</label>
                 <input
                   value={addForm.productName}
                   onChange={e => setAddForm(p => ({...p, productName: e.target.value}))}
@@ -443,7 +452,7 @@ export default function CounterApp({ token }: { token: string }) {
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>実数量 *</label>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>数量 ※</label>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -457,21 +466,22 @@ export default function CounterApp({ token }: { token: string }) {
               <button
                 disabled={adding}
                 onClick={async () => {
-                  if (!addForm.productCd.trim()) { setAddError('商品CDを入力してください'); return; }
-                  if (!addForm.productName.trim()) { setAddError('商品名を入力してください'); return; }
+                  if (!addForm.location.trim()) { setAddError('ロケーションを入力してください'); return; }
+                  if (!addForm.productCd.trim()) { setAddError('商品CD / 識別CDを入力してください'); return; }
                   if (!addForm.qty) { setAddError('数量を入力してください'); return; }
                   setAdding(true);
                   setAddError('');
                   try {
+                    const loc = addForm.location.trim();
                     const itemId = await addMasterItem(session!.id, {
-                      location: shelfKey,
+                      location: loc,
                       productCd: addForm.productCd.trim(),
                       productName: addForm.productName.trim(),
                     });
                     await submitCount({
                       sessionId: session!.id,
                       masterItemId: itemId,
-                      location: shelfKey,
+                      location: loc,
                       productCd: addForm.productCd.trim(),
                       productName: addForm.productName.trim(),
                       systemQty: 0,
