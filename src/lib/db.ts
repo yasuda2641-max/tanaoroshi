@@ -103,9 +103,10 @@ export async function importMasterItems(
 }
 
 export async function getMasterItems(sessionId: string): Promise<MasterItem[]> {
-  const q = query(collection(db, COL_MASTERS), where('sessionId', '==', sessionId), orderBy('location'));
+  const q = query(collection(db, COL_MASTERS), where('sessionId', '==', sessionId));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as MasterItem));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as MasterItem))
+    .sort((a, b) => a.location.localeCompare(b.location));
 }
 
 export async function getShelvesForSession(sessionId: string): Promise<ShelfProgress[]> {
@@ -183,7 +184,7 @@ export async function submitCount(data: {
 }
 
 export async function getCountRecords(sessionId: string): Promise<CountRecord[]> {
-  const q = query(collection(db, COL_COUNTS), where('sessionId', '==', sessionId), orderBy('location'));
+  const q = query(collection(db, COL_COUNTS), where('sessionId', '==', sessionId));
   const snap = await getDocs(q);
   return snap.docs.map(d => {
     const data = d.data();
@@ -192,7 +193,7 @@ export async function getCountRecords(sessionId: string): Promise<CountRecord[]>
       ...data,
       countedAt: (data.countedAt as Timestamp)?.toDate() ?? new Date(),
     } as CountRecord;
-  });
+  }).sort((a, b) => a.location.localeCompare(b.location));
 }
 
 export async function updateComment(recordId: string, causeCategory: string, comment: string): Promise<void> {

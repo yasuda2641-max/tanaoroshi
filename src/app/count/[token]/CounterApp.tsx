@@ -61,8 +61,12 @@ export default function CounterApp({ token }: { token: string }) {
   // 棚一覧を取得
   const loadShelves = useCallback(async () => {
     if (!session) return;
-    const s = await getShelvesForSession(session.id);
-    setShelves(s);
+    try {
+      const s = await getShelvesForSession(session.id);
+      setShelves(s);
+    } catch (e) {
+      setError('棚データの読み込みに失敗しました: ' + String(e));
+    }
   }, [session]);
 
   useEffect(() => { loadShelves(); }, [loadShelves]);
