@@ -47,11 +47,13 @@ export interface CountRecord {
   hasDiff: boolean;
   staffName: string;
   countedAt: Date;
-  expiryDate?: string;    // 賞味期限（任意）
-  comment?: string;       // 差異原因コメント
+  expiryDate?: string;        // 賞味期限（手入力）
+  masterExpiryDate?: string;  // 出荷期限日（マスタCSVから）
+  masterLotNumber?: string;   // ロット番号（マスタCSVから）
+  comment?: string;           // 差異原因コメント
   causeCategory?: string;
-  isRecounted?: boolean;  // リカウント済み
-  recountOk?: boolean;    // 管理者リカウントOK確認済み
+  isRecounted?: boolean;      // リカウント済み
+  recountOk?: boolean;        // 管理者リカウントOK確認済み
 }
 
 export interface ShelfProgress {

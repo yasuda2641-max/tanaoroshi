@@ -134,8 +134,10 @@ export default function CounterApp({ token }: { token: string }) {
         systemQty:   currentItem.systemQty,
         actualQty:   parseInt(countState.qty, 10),
         staffName:   staffName,
-        expiryDate:  countState.expiry || undefined,
-        comment:     countState.comment || undefined,
+        expiryDate:        countState.expiry || undefined,
+        masterExpiryDate:  currentItem.expiryDate || undefined,
+        masterLotNumber:   currentItem.lotNumber || undefined,
+        comment:           countState.comment || undefined,
       });
       setCounted(prev => new Set([...prev, currentItem.id]));
       setScreen('item-list');

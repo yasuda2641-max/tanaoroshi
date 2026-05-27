@@ -93,15 +93,20 @@ function ReportContent() {
   function exportCsv() {
     const okRecords = diffRecords.filter(r => r.recountOk);
     if (okRecords.length === 0) { alert('リカウントOKの件数が0件です。'); return; }
-    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,担当者,原因カテゴリ,原因コメント\n';
+    const filterLabel = filter === 'all' ? 'すべて' : filter === 'plus' ? '数量超過' : filter === 'minus' ? '数量不足' : 'コメント未記入';
+    const bikou = `${session?.name ?? ''}_${filterLabel}`;
+    const header = '倉庫ID,商品コード,強制出庫,ロケーション,出荷期限日,ロット番号,強制出庫,備考\n';
     const rows = okRecords.map(r => {
-      return [r.location, r.productCd, `"${r.productName}"`, r.systemQty, r.actualQty,
-              r.diff, r.staffName, r.causeCategory ?? '', `"${r.comment ?? ''}"`].join(',');
+      const qty = Math.abs(r.diff);
+      const flag = r.diff < 0 ? 1 : '';
+      return [1114, r.productCd, qty, r.location,
+              r.masterExpiryDate ?? '', r.masterLotNumber ?? '',
+              flag, `"${bikou}"`].join(',');
     }).join('\n');
     const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `diff_report_${selectedId.slice(0,8)}.csv`;
+    a.download = `tanaoroshi_${selectedId.slice(0,8)}.csv`;
     a.click();
   }
 
@@ -169,7 +174,7 @@ function ReportContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','担当者','原因コメント','リカウントOK',''].map(h => (
+                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','出荷期限日','担当者','原因コメント','リカウントOK',''].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -185,6 +190,7 @@ function ReportContent() {
                         <td className="px-3 py-3 text-right text-stone-600">{r.systemQty}</td>
                         <td className="px-3 py-3 text-right font-semibold text-stone-900">{r.actualQty}</td>
                         <td className="px-3 py-3 text-center"><DiffValue diff={r.diff} /></td>
+                        <td className="px-3 py-3 text-xs text-stone-500">{r.masterExpiryDate ?? '-'}</td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.staffName}</td>
                         <td className="px-3 py-3 max-w-[160px]">
                           {r.comment
