@@ -49,7 +49,7 @@ export default function CounterApp({ token }: { token: string }) {
   const [error, setError]             = useState('');
 
   // 商品追加フォーム
-  const [addForm, setAddForm] = useState({ location: '', productCd: '', productName: '', qty: '' });
+  const [addForm, setAddForm] = useState({ location: '', productCd: '', productName: '', qty: '', expiryDate: '' });
   const [addError, setAddError] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -276,7 +276,7 @@ export default function CounterApp({ token }: { token: string }) {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setAddForm({ location: shelfKey, productCd: '', productName: '', qty: '' }); setAddError(''); setScreen('add-product'); }}
+                  onClick={() => { setAddForm({ location: shelfKey, productCd: '', productName: '', qty: '', expiryDate: '' }); setAddError(''); setScreen('add-product'); }}
                   className="px-3 py-1.5 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-lg"
                 >
                   ＋ 商品追加
@@ -452,6 +452,15 @@ export default function CounterApp({ token }: { token: string }) {
                 />
               </div>
               <div>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>出荷期限日</label>
+                <input
+                  type="date"
+                  value={addForm.expiryDate}
+                  onChange={e => setAddForm(p => ({...p, expiryDate: e.target.value}))}
+                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+              <div>
                 <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>数量 ※</label>
                 <input
                   type="number"
@@ -487,6 +496,8 @@ export default function CounterApp({ token }: { token: string }) {
                       systemQty: 0,
                       actualQty: parseInt(addForm.qty, 10),
                       staffName,
+                      masterExpiryDate: addForm.expiryDate.trim() || undefined,
+                      isAdded: true,
                     });
                     setCounted(prev => new Set([...prev, itemId]));
                     await loadShelfItems(shelfKey);
