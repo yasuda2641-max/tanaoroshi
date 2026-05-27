@@ -83,20 +83,23 @@ function firestoreToSession(id: string, d: Record<string, unknown>): InventorySe
 
 export async function importMasterItems(
   sessionId: string,
-  rows: Array<{ location: string; productCd: string; productName: string; systemQty: number; pickingQty: number }>
+  rows: Array<{ location: string; productCd: string; productName: string; systemQty: number; pickingQty: number; expiryDate?: string; lotNumber?: string }>
 ): Promise<void> {
   const batch = writeBatch(db);
   for (const row of rows) {
     const { building, aisle, shelf, locationKey } = parseLocation(row.location);
     const ref = doc(collection(db, COL_MASTERS));
-    batch.set(ref, {
+    const data: Record<string, unknown> = {
       sessionId, building, aisle, shelf, locationKey,
       location:    row.location,
       productCd:   row.productCd,
       productName: row.productName,
       systemQty:   row.systemQty,
       pickingQty:  row.pickingQty,
-    });
+    };
+    if (row.expiryDate) data.expiryDate = row.expiryDate;
+    if (row.lotNumber)  data.lotNumber  = row.lotNumber;
+    batch.set(ref, data);
   }
   await batch.commit();
   await updateDoc(doc(db, COL_SESSIONS, sessionId), { totalItems: rows.length });
@@ -154,12 +157,11 @@ export async function submitCount(data: {
   const diff = data.actualQty - data.systemQty;
   const diffRate = data.systemQty > 0 ? diff / data.systemQty : 0;
 
-  // 既存レコードがあれば上書き（再計数）
+  // 既存レコードがあれば上書き（再計数）- masterItemId で一意判定
   const existing = await getDocs(query(
     collection(db, COL_COUNTS),
     where('sessionId', '==', data.sessionId),
-    where('location', '==', data.location),
-    where('productCd', '==', data.productCd),
+    where('masterItemId', '==', data.masterItemId),
   ));
 
   const payload = Object.fromEntries(
@@ -207,18 +209,23 @@ export async function updateComment(recordId: string, causeCategory: string, com
 
 export function parseMasterCsv(text: string): Array<{
   location: string; productCd: string; productName: string;
-  systemQty: number; pickingQty: number;
+  systemQty: number; pickingQty: number; expiryDate: string; lotNumber: string;
 }> {
   const lines = text.trim().split('\n');
   // ヘッダー行をスキップ
+  // 列: A(0)商品コード B(1)識別コード C(2)型番 D(3)商品名 E(4)商品名かな F(5)商品区分
+  //     G(6)入庫待ち H(7)保管中 I(8)保留 J(9)ピッキング中 K(10)倉庫
+  //     L(11)ロケーション M(12)出荷期限日 N(13)ロット番号
   return lines.slice(1).map(line => {
     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
     return {
-      location:    cols[0] ?? '',
-      productCd:   cols[1] ?? '',
-      productName: cols[2] ?? '',
-      systemQty:   parseInt(cols[3] ?? '0', 10),
-      pickingQty:  parseInt(cols[4] ?? '0', 10),
+      productCd:   cols[0] ?? '',
+      productName: cols[3] ?? '',
+      systemQty:   parseInt(cols[7] ?? '0', 10),
+      pickingQty:  parseInt(cols[9] ?? '0', 10),
+      location:    cols[11] ?? '',
+      expiryDate:  cols[12] ?? '',
+      lotNumber:   cols[13] ?? '',
     };
   }).filter(r => r.location && r.productCd);
 }

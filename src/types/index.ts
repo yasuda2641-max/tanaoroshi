@@ -29,6 +29,8 @@ export interface MasterItem {
   productName: string;
   systemQty: number;      // 保管中
   pickingQty: number;     // ピッキング中（参照のみ）
+  expiryDate?: string;    // 出荷期限日
+  lotNumber?: string;     // ロット番号
 }
 
 export interface CountRecord {

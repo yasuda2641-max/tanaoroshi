@@ -99,7 +99,7 @@ export default function CounterApp({ token }: { token: string }) {
     // 計数済みアイテムを取得してSetに
     const { getCountRecords } = await import('@/lib/db');
     const recs = await getCountRecords(session!.id);
-    const set = new Set(recs.filter(r => r.location.startsWith(s.locationKey)).map(r => `${r.location}::${r.productCd}`));
+    const set = new Set(recs.filter(r => r.location.startsWith(s.locationKey)).map(r => r.masterItemId));
     setCounted(set);
     setScreen('item-list');
   }
@@ -137,8 +137,7 @@ export default function CounterApp({ token }: { token: string }) {
         expiryDate:  countState.expiry || undefined,
         comment:     countState.comment || undefined,
       });
-      const key = `${currentItem.location}::${currentItem.productCd}`;
-      setCounted(prev => new Set([...prev, key]));
+      setCounted(prev => new Set([...prev, currentItem.id]));
       await loadShelves();
       setScreen('item-list');
     } catch (e) {
@@ -149,7 +148,7 @@ export default function CounterApp({ token }: { token: string }) {
   }
 
   const shelfItems = items.sort((a, b) => a.location.localeCompare(b.location));
-  const doneCount  = shelfItems.filter(i => counted.has(`${i.location}::${i.productCd}`)).length;
+  const doneCount  = shelfItems.filter(i => counted.has(i.id)).length;
   const allDone    = shelfItems.length > 0 && doneCount === shelfItems.length;
 
   // ── レンダリング ──────────────────────────────
@@ -289,6 +288,7 @@ export default function CounterApp({ token }: { token: string }) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.productName}</p>
                       <p className="text-xs text-stone-400">{item.location} ／ {item.productCd}</p>
+                      {item.expiryDate && <p className="text-xs text-amber-600">期限: {item.expiryDate}{item.lotNumber ? ` ／ ロット: ${item.lotNumber}` : ''}</p>}
                     </div>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded
                       ${done ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>
@@ -319,6 +319,9 @@ export default function CounterApp({ token }: { token: string }) {
               <p className="text-xs text-stone-400">{currentItem.location}</p>
               <h1 className="text-base font-bold leading-tight">{currentItem.productName}</h1>
               <p className="text-xs text-stone-400 mt-0.5">商品CD: {currentItem.productCd}</p>
+              {currentItem.expiryDate && (
+                <p className="text-sm font-semibold text-amber-600 mt-1">出荷期限日: {currentItem.expiryDate}{currentItem.lotNumber ? ` ／ ロット: ${currentItem.lotNumber}` : ''}</p>
+              )}
               <a
                 href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
                 target="_blank"
