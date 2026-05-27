@@ -19,6 +19,7 @@ interface CountState {
   qty: string;
   expiryOpen: boolean;
   expiry: string;
+  comment: string;
 }
 
 const CAUSE_OPTIONS = [
@@ -105,7 +106,7 @@ export default function CounterApp({ token }: { token: string }) {
 
   function openItem(item: MasterItem) {
     setCurrentItem(item);
-    setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '' });
+    setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
     setError('');
     setScreen('count-input');
   }
@@ -135,6 +136,7 @@ export default function CounterApp({ token }: { token: string }) {
         actualQty:   parseInt(countState.qty, 10),
         staffName:   staffName,
         expiryDate:  countState.expiry || undefined,
+        comment:     countState.comment || undefined,
       });
       const key = `${currentItem.location}::${currentItem.productCd}`;
       setCounted(prev => new Set([...prev, key]));
@@ -384,6 +386,15 @@ export default function CounterApp({ token }: { token: string }) {
                 </div>
               )}
             </div>
+
+            {/* コメント */}
+            <textarea
+              value={countState.comment}
+              onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
+              placeholder="コメント（任意）：気になることがあれば記入"
+              rows={2}
+              className="w-full px-4 py-3 text-sm border border-stone-200 rounded-xl outline-none focus:border-[#4A7A5A] resize-none bg-white"
+            />
 
             {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
           </>

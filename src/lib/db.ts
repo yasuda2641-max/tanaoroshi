@@ -149,6 +149,7 @@ export async function submitCount(data: {
   actualQty: number;
   staffName: string;
   expiryDate?: string;
+  comment?: string;
 }): Promise<void> {
   const diff = data.actualQty - data.systemQty;
   const diffRate = data.systemQty > 0 ? diff / data.systemQty : 0;
