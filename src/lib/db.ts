@@ -161,14 +161,16 @@ export async function submitCount(data: {
     where('productCd', '==', data.productCd),
   ));
 
-  const payload = {
-    ...data,
-    diff,
-    diffRate,
-    hasDiff: diff !== 0,
-    countedAt: serverTimestamp(),
-    isRecounted: !existing.empty,
-  };
+  const payload = Object.fromEntries(
+    Object.entries({
+      ...data,
+      diff,
+      diffRate,
+      hasDiff: diff !== 0,
+      countedAt: serverTimestamp(),
+      isRecounted: !existing.empty,
+    }).filter(([, v]) => v !== undefined)
+  );
 
   if (!existing.empty) {
     await updateDoc(existing.docs[0].ref, payload);
