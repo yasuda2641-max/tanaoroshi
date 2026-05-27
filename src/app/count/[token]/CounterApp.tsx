@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { getSessionByToken, getShelvesForSession, getMasterItems, submitCount } from '@/lib/db';
+import { getSessionByToken, getShelvesForSession, getMasterItems, submitCount, addMasterItem } from '@/lib/db';
 import type { InventorySession, MasterItem, ShelfProgress } from '@/types';
 
 type Screen =
@@ -12,7 +12,8 @@ type Screen =
   | 'select-shelf'
   | 'item-list'
   | 'count-input'
-  | 'shelf-complete';
+  | 'shelf-complete'
+  | 'add-product';
 
 interface CountState {
   scanned: boolean;
@@ -46,6 +47,11 @@ export default function CounterApp({ token }: { token: string }) {
   const [countState, setCountState]   = useState<CountState>({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
   const [submitting, setSubmitting]   = useState(false);
   const [error, setError]             = useState('');
+
+  // 商品追加フォーム
+  const [addForm, setAddForm] = useState({ productCd: '', productName: '', qty: '' });
+  const [addError, setAddError] = useState('');
+  const [adding, setAdding] = useState(false);
 
   // ロード
   useEffect(() => {
@@ -268,14 +274,22 @@ export default function CounterApp({ token }: { token: string }) {
                 <h1 className="text-lg font-bold">{shelfKey} 棚</h1>
                 <p className="text-sm text-stone-400">{doneCount}/{shelfItems.length}件完了</p>
               </div>
-              {allDone && (
+              <div className="flex gap-2">
                 <button
-                  onClick={() => setScreen('shelf-complete')}
-                  className="px-4 py-2 bg-[#1A3A2A] text-white text-sm font-semibold rounded-lg"
+                  onClick={() => { setAddForm({ productCd: '', productName: '', qty: '' }); setAddError(''); setScreen('add-product'); }}
+                  className="px-3 py-1.5 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-lg"
                 >
-                  完了にする
+                  ＋ 商品追加
                 </button>
-              )}
+                {allDone && (
+                  <button
+                    onClick={() => setScreen('shelf-complete')}
+                    className="px-4 py-2 bg-[#1A3A2A] text-white text-sm font-semibold rounded-lg"
+                  >
+                    完了にする
+                  </button>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               {shelfItems.map(item => {
@@ -398,6 +412,86 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
 
             {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+          </>
+        )}
+
+        {/* ── 商品追加 ── */}
+        {screen === 'add-product' && (
+          <>
+            <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} />
+            <div className="mb-5">
+              <h1 className="text-lg font-bold">商品を追加</h1>
+              <p className="text-sm text-stone-400 mt-0.5">{shelfKey} 棚 ／ 想定外の商品を登録</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD *</label>
+                <input
+                  value={addForm.productCd}
+                  onChange={e => setAddForm(p => ({...p, productCd: e.target.value}))}
+                  placeholder="例: 00127"
+                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品名 *</label>
+                <input
+                  value={addForm.productName}
+                  onChange={e => setAddForm(p => ({...p, productName: e.target.value}))}
+                  placeholder="例: 金太洋 栗甘露煮"
+                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>実数量 *</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={addForm.qty}
+                  onChange={e => setAddForm(p => ({...p, qty: e.target.value}))}
+                  placeholder="0"
+                  style={{display:'block',width:'100%',padding:'12px',fontSize:'24px',fontWeight:'bold',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box',textAlign:'center'}}
+                />
+              </div>
+              {addError && <p style={{fontSize:'12px',color:'#ef4444'}}>{addError}</p>}
+              <button
+                disabled={adding}
+                onClick={async () => {
+                  if (!addForm.productCd.trim()) { setAddError('商品CDを入力してください'); return; }
+                  if (!addForm.productName.trim()) { setAddError('商品名を入力してください'); return; }
+                  if (!addForm.qty) { setAddError('数量を入力してください'); return; }
+                  setAdding(true);
+                  setAddError('');
+                  try {
+                    const itemId = await addMasterItem(session!.id, {
+                      location: shelfKey,
+                      productCd: addForm.productCd.trim(),
+                      productName: addForm.productName.trim(),
+                    });
+                    await submitCount({
+                      sessionId: session!.id,
+                      masterItemId: itemId,
+                      location: shelfKey,
+                      productCd: addForm.productCd.trim(),
+                      productName: addForm.productName.trim(),
+                      systemQty: 0,
+                      actualQty: parseInt(addForm.qty, 10),
+                      staffName,
+                    });
+                    setCounted(prev => new Set([...prev, itemId]));
+                    await loadShelfItems(shelfKey);
+                    setScreen('item-list');
+                  } catch (e) {
+                    setAddError('追加に失敗しました: ' + String(e));
+                  } finally {
+                    setAdding(false);
+                  }
+                }}
+                style={{display:'block',width:'100%',padding:'16px',background:'#1A3A2A',color:'white',fontWeight:'bold',fontSize:'16px',borderRadius:'12px',border:'none',cursor:'pointer'}}
+              >
+                {adding ? '追加中...' : '追加する'}
+              </button>
+            </div>
           </>
         )}
 

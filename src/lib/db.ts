@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, getDoc, getDocs, updateDoc, query,
-  where, orderBy, serverTimestamp, Timestamp, writeBatch
+  where, orderBy, serverTimestamp, Timestamp, writeBatch, increment
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { InventorySession, MasterItem, CountRecord, ShelfProgress } from '@/types';
@@ -209,6 +209,22 @@ export async function updateComment(recordId: string, causeCategory: string, com
 
 export async function updateRecountOk(recordId: string, recountOk: boolean): Promise<void> {
   await updateDoc(doc(db, COL_COUNTS, recordId), { recountOk });
+}
+
+export async function addMasterItem(sessionId: string, item: {
+  location: string; productCd: string; productName: string;
+}): Promise<string> {
+  const { building, aisle, shelf, locationKey } = parseLocation(item.location);
+  const ref = await addDoc(collection(db, COL_MASTERS), {
+    sessionId, building, aisle, shelf, locationKey,
+    location:    item.location,
+    productCd:   item.productCd,
+    productName: item.productName,
+    systemQty:   0,
+    pickingQty:  0,
+  });
+  await updateDoc(doc(db, COL_SESSIONS, sessionId), { totalItems: increment(1) });
+  return ref.id;
 }
 
 // ── CSV パーサー ─────────────────────────────────
