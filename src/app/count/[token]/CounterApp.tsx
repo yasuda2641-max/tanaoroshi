@@ -277,7 +277,7 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
             <div className="space-y-2">
               {shelfItems.map(item => {
-                const done = counted.has(`${item.location}::${item.productCd}`);
+                const done = counted.has(item.id);
                 return (
                   <div
                     key={`${item.location}::${item.productCd}`}
