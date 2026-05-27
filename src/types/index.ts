@@ -54,6 +54,7 @@ export interface CountRecord {
   causeCategory?: string;
   isRecounted?: boolean;      // リカウント済み
   recountOk?: boolean;        // 管理者リカウントOK確認済み
+  isAdded?: boolean;          // 計数者が現場で追加した商品
 }
 
 export interface ShelfProgress {
