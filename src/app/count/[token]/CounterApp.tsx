@@ -55,7 +55,7 @@ export default function CounterApp({ token }: { token: string }) {
       const saved = localStorage.getItem(`staff_${sess.id}`);
       if (saved) { setStaffName(saved); setScreen('select-building'); }
       else setScreen('staff-input');
-    });
+    }).catch(() => setScreen('error'));
   }, [token]);
 
   // 棚一覧を取得
