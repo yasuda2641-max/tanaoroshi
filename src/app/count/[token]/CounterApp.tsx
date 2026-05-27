@@ -388,13 +388,16 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
 
             {/* コメント */}
-            <textarea
-              value={countState.comment}
-              onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
-              placeholder="コメント（任意）：気になることがあれば記入"
-              rows={2}
-              className="w-full px-4 py-3 text-sm border border-stone-200 rounded-xl outline-none focus:border-[#4A7A5A] resize-none bg-white"
-            />
+            <div style={{border: '1px solid #d6d3d1', borderRadius: '12px', overflow: 'hidden', background: '#fff'}}>
+              <p style={{fontSize: '12px', color: '#78716c', padding: '10px 16px 0'}}>コメント（任意）</p>
+              <textarea
+                value={countState.comment}
+                onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
+                placeholder="気になることがあれば記入"
+                rows={2}
+                style={{width: '100%', padding: '6px 16px 10px', fontSize: '14px', background: 'transparent', outline: 'none', resize: 'none', display: 'block', boxSizing: 'border-box'}}
+              />
+            </div>
 
             {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
           </>
