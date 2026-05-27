@@ -85,11 +85,10 @@ function ReportContent() {
   }
 
   function exportCsv() {
-    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,差異率,担当者,原因カテゴリ,原因コメント\n';
+    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,担当者,原因カテゴリ,原因コメント\n';
     const rows = diffRecords.map(r => {
-      const rate = r.systemQty > 0 ? ((r.diff / r.systemQty) * 100).toFixed(1) + '%' : '-';
       return [r.location, r.productCd, `"${r.productName}"`, r.systemQty, r.actualQty,
-              r.diff, rate, r.staffName, r.causeCategory ?? '', `"${r.comment ?? ''}"`].join(',');
+              r.diff, r.staffName, r.causeCategory ?? '', `"${r.comment ?? ''}"`].join(',');
     }).join('\n');
     const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
@@ -162,7 +161,7 @@ function ReportContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','差異率','担当者','原因コメント',''].map(h => (
+                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','担当者','原因コメント',''].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -178,13 +177,6 @@ function ReportContent() {
                         <td className="px-3 py-3 text-right text-stone-600">{r.systemQty}</td>
                         <td className="px-3 py-3 text-right font-semibold text-stone-900">{r.actualQty}</td>
                         <td className="px-3 py-3 text-center"><DiffValue diff={r.diff} /></td>
-                        <td className="px-3 py-3 text-right text-xs text-stone-500">
-                          {r.diff !== 0 ? (
-                            <span className={r.diff > 0 ? 'text-red-600' : 'text-amber-600'}>
-                              {r.diff > 0 ? '+' : ''}{rate}%
-                            </span>
-                          ) : '-'}
-                        </td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.staffName}</td>
                         <td className="px-3 py-3 max-w-[160px]">
                           {r.comment
