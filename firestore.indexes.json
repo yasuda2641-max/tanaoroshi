@@ -1,0 +1,37 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "masterItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sessionId", "order": "ASCENDING" },
+        { "fieldPath": "location",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "countRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sessionId", "order": "ASCENDING" },
+        { "fieldPath": "location",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "countRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sessionId", "order": "ASCENDING" },
+        { "fieldPath": "location",  "order": "ASCENDING" },
+        { "fieldPath": "productCd", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "token",     "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
