@@ -56,13 +56,14 @@ function ReportContent() {
       .finally(() => setLoading(false));
   }, [selectedId]);
 
-  const diffRecords = records.filter(r => r.hasDiff);
-  const noComment   = diffRecords.filter(r => !r.comment);
+  // 差異あり、または実数量が0のレコードを対象とする（0個は必ず記録）
+  const diffRecords = records.filter(r => r.hasDiff || r.actualQty === 0);
+  const noComment   = diffRecords.filter(r => r.hasDiff && !r.comment);
 
   const filtered = diffRecords.filter(r => {
     if (filter === 'plus')      return r.diff > 0;
     if (filter === 'minus')     return r.diff < 0;
-    if (filter === 'nocomment') return !r.comment;
+    if (filter === 'nocomment') return r.hasDiff && !r.comment;
     return true;
   });
 
