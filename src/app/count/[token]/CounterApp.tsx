@@ -138,8 +138,8 @@ export default function CounterApp({ token }: { token: string }) {
         comment:     countState.comment || undefined,
       });
       setCounted(prev => new Set([...prev, currentItem.id]));
-      await loadShelves();
       setScreen('item-list');
+      loadShelves(); // バックグラウンドで棚進捗を更新
     } catch (e) {
       setError('送信に失敗しました: ' + String(e));
     } finally {
