@@ -43,7 +43,7 @@ export default function CounterApp({ token }: { token: string }) {
 
   // count input state
   const [currentItem, setCurrentItem] = useState<MasterItem | null>(null);
-  const [countState, setCountState]   = useState<CountState>({ scanned: false, qty: '', expiryOpen: false, expiry: '' });
+  const [countState, setCountState]   = useState<CountState>({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
   const [submitting, setSubmitting]   = useState(false);
   const [error, setError]             = useState('');
 
@@ -388,14 +388,14 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
 
             {/* コメント */}
-            <div style={{border: '1px solid #d6d3d1', borderRadius: '12px', overflow: 'hidden', background: '#fff'}}>
-              <p style={{fontSize: '12px', color: '#78716c', padding: '10px 16px 0'}}>コメント（任意）</p>
+            <div style={{marginTop: '8px'}}>
+              <label style={{display: 'block', fontSize: '12px', color: '#78716c', marginBottom: '4px'}}>コメント（任意）</label>
               <textarea
                 value={countState.comment}
                 onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
                 placeholder="気になることがあれば記入"
-                rows={2}
-                style={{width: '100%', padding: '6px 16px 10px', fontSize: '14px', background: 'transparent', outline: 'none', resize: 'none', display: 'block', boxSizing: 'border-box'}}
+                rows={3}
+                style={{display: 'block', width: '100%', padding: '12px', fontSize: '14px', border: '2px solid #a8a29e', borderRadius: '12px', background: '#ffffff', outline: 'none', resize: 'none', boxSizing: 'border-box', color: '#1c1917'}}
               />
             </div>
 
