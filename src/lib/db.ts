@@ -231,6 +231,31 @@ export async function updateRecountOk(recordId: string, recountOk: boolean): Pro
   await updateDoc(doc(db, COL_COUNTS, recordId), { recountOk });
 }
 
+export async function fixWmsItems(sessionId: string): Promise<number> {
+  const q = query(
+    collection(db, COL_MASTERS),
+    where('sessionId', '==', sessionId),
+    where('locationKey', '==', 'WMS')
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return 0;
+
+  const batch = writeBatch(db);
+  for (const d of snap.docs) {
+    const data = d.data();
+    const actualLocation = (data.expiryDate as string) || '';
+    const actualExpiryDate = (data.lotNumber as string) || '';
+    if (!actualLocation) continue;
+    const { building, aisle, shelf, locationKey } = parseLocation(actualLocation);
+    const update: Record<string, unknown> = { location: actualLocation, building, aisle, shelf, locationKey };
+    if (actualExpiryDate) update.expiryDate = actualExpiryDate; else update.expiryDate = '';
+    update.lotNumber = '';
+    batch.update(d.ref, update);
+  }
+  await batch.commit();
+  return snap.size;
+}
+
 export async function addMasterItem(sessionId: string, item: {
   location: string; productCd: string; productName: string;
 }): Promise<string> {

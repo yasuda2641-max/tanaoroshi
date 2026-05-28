@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
-import { listSessions, importMasterItems, getMasterItems, parseMasterCsv } from '@/lib/db';
+import { listSessions, importMasterItems, getMasterItems, parseMasterCsv, fixWmsItems } from '@/lib/db';
 import type { InventorySession } from '@/types';
 import { Button, Card, Select, Alert, Loading } from '@/components/ui';
 
@@ -125,6 +125,25 @@ export default function MasterPage() {
             onClick={handleReImport}
           >
             {uploading ? '取込中...' : '再取込を実行'}
+          </Button>
+
+          <Button
+            disabled={!selectedId || uploading}
+            onClick={async () => {
+              if (!selectedId) return;
+              setUploading(true);
+              setMessage('');
+              try {
+                const count = await fixWmsItems(selectedId);
+                setMessage(`✅ WMSロケーション修復完了：${count}件を修正しました`);
+              } catch (e) {
+                setMessage('❌ エラー: ' + String(e));
+              } finally {
+                setUploading(false);
+              }
+            }}
+          >
+            WMSロケーション修復
           </Button>
         </Card>
 
