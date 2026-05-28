@@ -121,7 +121,7 @@ function ReportContent() {
   return (
     <>
       <div className="bg-white border-b border-stone-200 px-8 h-14 flex items-center justify-between">
-        <span className="font-semibold text-stone-900">差異レポート</span>
+        <span className="font-semibold text-stone-900">棚卸しレポート</span>
         <div className="flex items-center gap-3">
           <Select
             value={selectedId}
@@ -137,6 +137,27 @@ function ReportContent() {
       </div>
 
       <div className="p-8 space-y-6">
+        {/* 計数URL */}
+        {session && (
+          <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5">
+            <span className="text-xs text-stone-400 shrink-0">計数URL</span>
+            <a
+              href={`/count/${session.token}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-[#4A7A5A] underline truncate"
+            >
+              {typeof window !== 'undefined' ? `${window.location.origin}/count/${session.token}` : `/count/${session.token}`}
+            </a>
+            <button
+              onClick={() => navigator.clipboard.writeText(`${window.location.origin}/count/${session.token}`)}
+              className="text-xs px-2 py-1 bg-white border border-stone-300 rounded text-stone-500 hover:border-stone-400 shrink-0"
+            >
+              コピー
+            </button>
+          </div>
+        )}
+
         {/* サマリー */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label="完了アイテム" value={session?.completedItems ?? 0} sub={`全${session?.totalItems ?? 0}件中 ${pct}%`} />
