@@ -85,23 +85,33 @@ export async function importMasterItems(
   sessionId: string,
   rows: Array<{ location: string; productCd: string; productName: string; systemQty: number; pickingQty: number; expiryDate?: string; lotNumber?: string }>
 ): Promise<void> {
-  const batch = writeBatch(db);
-  for (const row of rows) {
-    const { building, aisle, shelf, locationKey } = parseLocation(row.location);
-    const ref = doc(collection(db, COL_MASTERS));
-    const data: Record<string, unknown> = {
-      sessionId, building, aisle, shelf, locationKey,
-      location:    row.location,
-      productCd:   row.productCd,
-      productName: row.productName,
-      systemQty:   row.systemQty,
-      pickingQty:  row.pickingQty,
-    };
-    if (row.expiryDate) data.expiryDate = row.expiryDate;
-    if (row.lotNumber)  data.lotNumber  = row.lotNumber;
-    batch.set(ref, data);
+  // 既存のマスタアイテムを全削除
+  const existing = await getDocs(query(collection(db, COL_MASTERS), where('sessionId', '==', sessionId)));
+  const deleteBatch = writeBatch(db);
+  existing.docs.forEach(d => deleteBatch.delete(d.ref));
+  await deleteBatch.commit();
+
+  // 新規登録（500件ずつバッチ）
+  for (let i = 0; i < rows.length; i += 499) {
+    const chunk = rows.slice(i, i + 499);
+    const batch = writeBatch(db);
+    for (const row of chunk) {
+      const { building, aisle, shelf, locationKey } = parseLocation(row.location);
+      const ref = doc(collection(db, COL_MASTERS));
+      const data: Record<string, unknown> = {
+        sessionId, building, aisle, shelf, locationKey,
+        location:    row.location,
+        productCd:   row.productCd,
+        productName: row.productName,
+        systemQty:   row.systemQty,
+        pickingQty:  row.pickingQty,
+      };
+      if (row.expiryDate) data.expiryDate = row.expiryDate;
+      if (row.lotNumber)  data.lotNumber  = row.lotNumber;
+      batch.set(ref, data);
+    }
+    await batch.commit();
   }
-  await batch.commit();
   await updateDoc(doc(db, COL_SESSIONS, sessionId), { totalItems: rows.length });
 }
 
