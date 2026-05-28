@@ -36,7 +36,9 @@ export default function MasterPage() {
       text = new TextDecoder('utf-8').decode(buffer);
     } else {
       const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
-      text = utf8.includes('\uFFFD') ? new TextDecoder('shift-jis').decode(buffer) : utf8;
+      const fffdCount = (utf8.match(/\uFFFD/g) ?? []).length;
+      const isShiftJis = fffdCount / utf8.length > 0.001;
+      text = isShiftJis ? new TextDecoder('shift-jis').decode(buffer) : utf8;
     }
     setCsvRows(parseMasterCsv(text));
     setCsvName(file.name);
