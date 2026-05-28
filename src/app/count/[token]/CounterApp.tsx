@@ -49,7 +49,7 @@ export default function CounterApp({ token }: { token: string }) {
   const [error, setError]             = useState('');
 
   // 商品追加フォーム
-  const [addForm, setAddForm] = useState({ location: '', productCd: '', productName: '', qty: '', expiryDate: '' });
+  const [addForm, setAddForm] = useState({ dan: '', retsu: '', productCd: '', productName: '', qty: '', expiryDate: '' });
   const [addError, setAddError] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -297,7 +297,7 @@ export default function CounterApp({ token }: { token: string }) {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setAddForm({ location: shelfKey, productCd: '', productName: '', qty: '', expiryDate: '' }); setAddError(''); setScreen('add-product'); }}
+                  onClick={() => { setAddForm({ dan: '', retsu: '', productCd: '', productName: '', qty: '', expiryDate: '' }); setAddError(''); setScreen('add-product'); }}
                   className="px-3 py-1.5 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-lg"
                 >
                   ＋ 商品追加
@@ -454,13 +454,28 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
             <div className="space-y-4">
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>ロケーション ※</label>
-                <input
-                  value={addForm.location}
-                  onChange={e => setAddForm(p => ({...p, location: e.target.value}))}
-                  placeholder="例: 2X-13-05-2-3"
-                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
-                />
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'8px'}}>ロケーション ※</label>
+                <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                  <div style={{padding:'12px 14px',fontSize:'16px',fontWeight:'600',background:'#f5f5f4',border:'2px solid #e7e5e4',borderRadius:'12px',color:'#57534e',whiteSpace:'nowrap'}}>
+                    {shelfKey}
+                  </div>
+                  <span style={{fontSize:'18px',color:'#a8a29e',fontWeight:'bold'}}>-</span>
+                  <input
+                    value={addForm.dan}
+                    onChange={e => setAddForm(p => ({...p, dan: e.target.value}))}
+                    placeholder="段"
+                    inputMode="numeric"
+                    style={{width:'64px',padding:'12px 8px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box',textAlign:'center'}}
+                  />
+                  <span style={{fontSize:'18px',color:'#a8a29e',fontWeight:'bold'}}>-</span>
+                  <input
+                    value={addForm.retsu}
+                    onChange={e => setAddForm(p => ({...p, retsu: e.target.value}))}
+                    placeholder="列"
+                    inputMode="numeric"
+                    style={{width:'64px',padding:'12px 8px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box',textAlign:'center'}}
+                  />
+                </div>
               </div>
               <div>
                 <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD / 識別CD</label>
@@ -504,11 +519,11 @@ export default function CounterApp({ token }: { token: string }) {
               <button
                 disabled={adding}
                 onClick={async () => {
-                  if (!addForm.location.trim()) { setAddError('ロケーションを入力してください'); return; }
+                  if (!shelfKey) { setAddError('ロケーションが取得できません'); return; }
                   setAdding(true);
                   setAddError('');
                   try {
-                    const loc = addForm.location.trim();
+                    const loc = [shelfKey, addForm.dan.trim(), addForm.retsu.trim()].filter(Boolean).join('-');
                     const itemId = await addMasterItem(session!.id, {
                       location: loc,
                       productCd: addForm.productCd.trim(),
