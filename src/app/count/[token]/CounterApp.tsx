@@ -78,6 +78,13 @@ export default function CounterApp({ token }: { token: string }) {
 
   useEffect(() => { loadShelves(); }, [loadShelves]);
 
+  // 棟・通路・棚の選択画面に移動するたびに進捗を再取得
+  useEffect(() => {
+    if (['select-building', 'select-aisle', 'select-shelf'].includes(screen)) {
+      loadShelves();
+    }
+  }, [screen, loadShelves]);
+
   // 棚のアイテム取得
   async function loadShelfItems(key: string) {
     if (!session) return;
