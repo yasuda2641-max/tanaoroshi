@@ -8,7 +8,7 @@ import {
   Textarea, Loading, EmptyState, Alert
 } from '@/components/ui';
 
-type Filter = 'all' | 'plus' | 'minus' | 'nocomment' | 'added';
+type Filter = 'all' | 'plus' | 'minus' | 'comment' | 'added';
 
 const CAUSE_OPTIONS = [
   '計数ミス（再カウント済）',
@@ -60,14 +60,14 @@ function ReportContent() {
 
   // 差異あり、または実数量が0のレコードを対象とする（0個は必ず記録）
   const diffRecords = records.filter(r => r.hasDiff || r.actualQty === 0);
-  const noComment   = diffRecords.filter(r => r.hasDiff && !r.comment);
+  const commentRecords = records.filter(r => r.comment);
 
   const addedRecords = records.filter(r => r.isAdded);
 
   const filtered = records.filter(r => {
     if (filter === 'plus')      return r.diff > 0;
     if (filter === 'minus')     return r.diff < 0;
-    if (filter === 'nocomment') return r.hasDiff && !r.comment;
+    if (filter === 'comment')   return !!r.comment;
     if (filter === 'added')     return r.isAdded;
     return true;
   });
@@ -167,7 +167,7 @@ function ReportContent() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label="完了アイテム" value={completedCount} sub={`全${session?.totalItems ?? 0}件中 ${pct}%`} />
           <StatCard label="差異あり件数" value={diffRecords.length} accent={diffRecords.length > 0 ? 'text-red-600' : undefined} sub="完了済みから" />
-          <StatCard label="コメント未記入" value={noComment.length} accent={noComment.length > 0 ? 'text-amber-600' : undefined} sub="差異件数中" />
+          <StatCard label="コメントあり" value={commentRecords.length} sub="計数済みから" />
           <StatCard label="進捗" value={`${pct}%`} sub={session?.status === 'completed' ? '完了' : '進行中'} />
         </div>
 
@@ -177,7 +177,7 @@ function ReportContent() {
             ['all',       `すべて（${records.length}）`],
             ['plus',      `数量超過（${diffRecords.filter(r=>r.diff>0).length}）`],
             ['minus',     `数量不足（${diffRecords.filter(r=>r.diff<0).length}）`],
-            ['nocomment', `コメント未記入（${noComment.length}）`],
+            ['comment',   `コメントあり（${commentRecords.length}）`],
             ['added',     `追加商品（${addedRecords.length}）`],
           ] as [Filter, string][]).map(([f, label]) => (
             <button
