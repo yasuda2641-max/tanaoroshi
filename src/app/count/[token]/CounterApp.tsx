@@ -335,7 +335,7 @@ export default function CounterApp({ token }: { token: string }) {
                 const done = s.filter(s => s.isCompleted).length;
                 const allCompleted = s.length > 0 && done === s.length;
                 return (
-                  <DrillItem key={b} label={`${b}棟`} badge={allCompleted ? '完了' : `${s.length}棚`} progress={done/s.length}
+                  <DrillItem key={b} label={`${b}棟`} badge={allCompleted ? '完了' : `${done}/${s.length}棚`} progress={done/s.length}
                     isCompleted={allCompleted}
                     onClick={() => selectBuilding(b)} />
                 );
@@ -355,7 +355,7 @@ export default function CounterApp({ token }: { token: string }) {
                 const done = s.filter(s => s.isCompleted).length;
                 const allCompleted = s.length > 0 && done === s.length;
                 return (
-                  <DrillItem key={a} label={`${a}通路`} badge={allCompleted ? '完了' : `${s.length}棚`} progress={done/s.length}
+                  <DrillItem key={a} label={`${a}通路`} badge={allCompleted ? '完了' : `${done}/${s.length}棚`} progress={done/s.length}
                     isCompleted={allCompleted}
                     onClick={() => selectAisle(a)} />
                 );
