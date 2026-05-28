@@ -142,7 +142,7 @@ export default function CounterApp({ token }: { token: string }) {
   function keyPress(k: string) {
     setCountState(prev => {
       if (k === 'del') return { ...prev, qty: prev.qty.slice(0, -1) };
-      if (prev.qty.length >= 4) return prev;
+      if (prev.qty.length >= 6) return prev;
       return { ...prev, qty: prev.qty + k };
     });
   }
