@@ -152,9 +152,7 @@ export default function CounterApp({ token }: { token: string }) {
         masterLotNumber:   currentItem.lotNumber || undefined,
         comment:           countState.comment || undefined,
       });
-      setCounted(prev => new Set([...prev, currentItem.id]));
-      setScreen('item-list');
-      loadShelves(); // バックグラウンドで棚進捗を更新
+      window.location.reload();
     } catch (e) {
       setError('送信に失敗しました: ' + String(e));
     } finally {
