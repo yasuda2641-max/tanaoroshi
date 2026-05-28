@@ -276,9 +276,9 @@ export default function CounterApp({ token }: { token: string }) {
                 <DrillItem
                   key={s.locationKey}
                   label={`${s.shelf}棚`}
-                  badge={s.isCompleted ? '完了' : `${s.totalItems}件`}
-                  badgeColor={s.isCompleted ? 'text-emerald-700 bg-emerald-50' : ''}
+                  badge={s.isCompleted ? '完了' : `${s.completedItems}/${s.totalItems}件`}
                   progress={s.completedItems / s.totalItems}
+                  isCompleted={s.isCompleted}
                   onClick={() => selectShelf(s)}
                 />
               ))}
@@ -598,23 +598,30 @@ function BackButton({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-function DrillItem({ label, badge, badgeColor, progress, onClick }: {
-  label: string; badge: string; badgeColor?: string; progress?: number; onClick: () => void;
+function DrillItem({ label, badge, badgeColor, progress, isCompleted, onClick }: {
+  label: string; badge: string; badgeColor?: string; progress?: number; isCompleted?: boolean; onClick: () => void;
 }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-stone-200 rounded-xl px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-stone-50 transition-all"
+      className={`rounded-xl px-4 py-3.5 flex items-center justify-between cursor-pointer transition-all
+        ${isCompleted
+          ? 'bg-emerald-500 border border-emerald-500 active:bg-emerald-600'
+          : 'bg-white border border-stone-200 active:bg-stone-50'}`}
     >
-      <div className="flex-1">
-        <span className="font-medium text-stone-900 text-sm">{label}</span>
-        {progress !== undefined && progress > 0 && (
-          <div className="h-1 bg-stone-100 rounded-full mt-1.5 w-24">
-            <div className="h-full bg-[#4A7A5A] rounded-full" style={{ width: `${Math.min(100, progress * 100)}%` }} />
-          </div>
-        )}
+      <div className="flex items-center gap-2.5 flex-1">
+        {isCompleted && <span className="text-white text-base font-bold">✓</span>}
+        <div>
+          <span className={`font-medium text-sm ${isCompleted ? 'text-white' : 'text-stone-900'}`}>{label}</span>
+          {!isCompleted && progress !== undefined && progress > 0 && (
+            <div className="h-1 bg-stone-100 rounded-full mt-1.5 w-24">
+              <div className="h-full bg-[#4A7A5A] rounded-full" style={{ width: `${Math.min(100, progress * 100)}%` }} />
+            </div>
+          )}
+        </div>
       </div>
-      <span className={`text-xs font-medium px-2 py-0.5 rounded bg-stone-100 text-stone-500 ${badgeColor ?? ''}`}>
+      <span className={`text-xs font-medium px-2 py-0.5 rounded
+        ${isCompleted ? 'bg-white/20 text-white' : `bg-stone-100 text-stone-500 ${badgeColor ?? ''}`}`}>
         {badge}
       </span>
     </div>
