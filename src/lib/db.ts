@@ -249,6 +249,26 @@ export async function addMasterItem(sessionId: string, item: {
 
 // ── CSV パーサー ─────────────────────────────────
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let cur = '';
+  let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuote) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') { inQuote = false; }
+      else { cur += ch; }
+    } else {
+      if (ch === '"') { inQuote = true; }
+      else if (ch === ',') { result.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
 export function parseMasterCsv(text: string): Array<{
   location: string; productCd: string; productName: string;
   systemQty: number; pickingQty: number; expiryDate: string; lotNumber: string;
@@ -259,7 +279,7 @@ export function parseMasterCsv(text: string): Array<{
   //     G(6)入庫待ち H(7)保管中 I(8)保留 J(9)ピッキング中 K(10)倉庫
   //     L(11)ロケーション M(12)出荷期限日 N(13)ロット番号
   return lines.slice(1).map(line => {
-    const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const cols = parseCsvLine(line);
     return {
       productCd:   cols[0] ?? '',
       productName: cols[3] ?? '',

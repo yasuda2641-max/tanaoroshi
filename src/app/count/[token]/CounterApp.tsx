@@ -189,7 +189,101 @@ export default function CounterApp({ token }: { token: string }) {
         <span className="text-white/60 text-xs">{staffName}</span>
       </div>
 
-      <div className="px-4 py-5 max-w-md mx-auto">
+      {/* ── 計数入力（フルハイト専用レイアウト） ── */}
+      {screen === 'count-input' && currentItem && (
+        <div style={{height: 'calc(100dvh - 48px)', display: 'flex', flexDirection: 'column', padding: '8px 16px 12px', maxWidth: '448px', margin: '0 auto', boxSizing: 'border-box'}}>
+          <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} />
+
+          {/* アイテム情報（コンパクト） */}
+          <div style={{marginBottom: '8px', flexShrink: 0}}>
+            <p style={{fontSize: '11px', color: '#a8a29e', marginBottom: '2px'}}>{currentItem.location} / {currentItem.productCd}</p>
+            <p style={{fontSize: '15px', fontWeight: 'bold', lineHeight: '1.3', color: '#1c1917'}}>{currentItem.productName}</p>
+            {currentItem.expiryDate && (
+              <p style={{fontSize: '12px', color: '#d97706', marginTop: '2px'}}>出荷期限日: {currentItem.expiryDate}</p>
+            )}
+            <a
+              href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{fontSize: '11px', color: '#4A7A5A', textDecoration: 'underline'}}
+            >
+              orderie で確認
+            </a>
+          </div>
+
+          {/* 数量表示 */}
+          <div style={{background: '#f5f5f4', borderRadius: '12px', textAlign: 'center', padding: '10px', marginBottom: '8px', flexShrink: 0}}>
+            <p style={{fontSize: '11px', color: '#a8a29e', marginBottom: '2px'}}>実数量</p>
+            <p style={{fontSize: '48px', fontWeight: 'bold', letterSpacing: '4px', lineHeight: '1', color: '#1c1917'}}>
+              {countState.qty || <span style={{color: '#d6d3d1'}}>-</span>}
+            </p>
+          </div>
+
+          {/* テンキー（flex-1で残りスペースを埋める） */}
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', flex: 1, minHeight: 0}}>
+            {['7','8','9','4','5','6','1','2','3','⌫','0','送信'].map(k => (
+              <button
+                key={k}
+                onClick={() => {
+                  if (k === '⌫') keyPress('del');
+                  else if (k === '送信') submitItem();
+                  else keyPress(k);
+                }}
+                style={{
+                  fontSize: k === '送信' || k === '⌫' ? '16px' : '22px',
+                  fontWeight: '500',
+                  borderRadius: '12px',
+                  border: k === '送信' ? 'none' : '1px solid #e7e5e4',
+                  background: k === '送信' ? '#1A3A2A' : k === '⌫' ? '#f5f5f4' : '#ffffff',
+                  color: k === '送信' ? '#ffffff' : k === '⌫' ? '#78716c' : '#1c1917',
+                  cursor: 'pointer',
+                  width: '100%',
+                  height: '100%',
+                  transition: 'transform 0.08s',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+                onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.95)')}
+                onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
+                onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+
+          {/* 賞味期限・コメント（折りたたみ） */}
+          <div style={{flexShrink: 0, marginTop: '8px'}}>
+            <button
+              onClick={() => setCountState(prev => ({ ...prev, expiryOpen: !prev.expiryOpen }))}
+              style={{width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#78716c', background: '#f5f5f4', borderRadius: '10px', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between'}}
+            >
+              <span>賞味期限 / コメント（任意）</span>
+              <span>{countState.expiryOpen ? '▲' : '▼'}</span>
+            </button>
+            {countState.expiryOpen && (
+              <div style={{marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                <input
+                  type="date"
+                  value={countState.expiry}
+                  onChange={e => setCountState(prev => ({ ...prev, expiry: e.target.value }))}
+                  style={{width: '100%', padding: '8px 12px', fontSize: '14px', border: '1px solid #d6d3d1', borderRadius: '10px', outline: 'none', boxSizing: 'border-box'}}
+                />
+                <textarea
+                  value={countState.comment}
+                  onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
+                  placeholder="コメント（任意）"
+                  rows={2}
+                  style={{width: '100%', padding: '8px 12px', fontSize: '14px', border: '1px solid #d6d3d1', borderRadius: '10px', outline: 'none', resize: 'none', boxSizing: 'border-box'}}
+                />
+              </div>
+            )}
+          </div>
+
+          {error && <p style={{fontSize: '12px', color: '#ef4444', marginTop: '4px'}}>{error}</p>}
+        </div>
+      )}
+
+      <div className={`px-4 py-5 max-w-md mx-auto ${screen === 'count-input' ? 'hidden' : ''}`}>
 
         {/* ── ローディング ── */}
         {screen === 'loading' && (
@@ -239,8 +333,10 @@ export default function CounterApp({ token }: { token: string }) {
               {buildings.map(b => {
                 const s = shelves.filter(s => s.building === b);
                 const done = s.filter(s => s.isCompleted).length;
+                const allCompleted = s.length > 0 && done === s.length;
                 return (
-                  <DrillItem key={b} label={`${b}棟`} badge={`${s.length}棚`} progress={done/s.length}
+                  <DrillItem key={b} label={`${b}棟`} badge={allCompleted ? '完了' : `${s.length}棚`} progress={done/s.length}
+                    isCompleted={allCompleted}
                     onClick={() => selectBuilding(b)} />
                 );
               })}
@@ -257,8 +353,10 @@ export default function CounterApp({ token }: { token: string }) {
               {aisles.map(a => {
                 const s = shelves.filter(s => s.building === building && s.aisle === a);
                 const done = s.filter(s => s.isCompleted).length;
+                const allCompleted = s.length > 0 && done === s.length;
                 return (
-                  <DrillItem key={a} label={`${a}通路`} badge={`${s.length}棚`} progress={done/s.length}
+                  <DrillItem key={a} label={`${a}通路`} badge={allCompleted ? '完了' : `${s.length}棚`} progress={done/s.length}
+                    isCompleted={allCompleted}
                     onClick={() => selectAisle(a)} />
                 );
               })}
@@ -354,95 +452,7 @@ export default function CounterApp({ token }: { token: string }) {
           </>
         )}
 
-        {/* ── 計数入力 ── */}
-        {screen === 'count-input' && currentItem && (
-          <>
-            <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} />
-
-            {/* アイテム情報 */}
-            <div className="mb-4">
-              <p className="text-xs text-stone-400">{currentItem.location}</p>
-              <h1 className="text-base font-bold leading-tight">{currentItem.productName}</h1>
-              <p className="text-xs text-stone-400 mt-0.5">商品CD: {currentItem.productCd}</p>
-              {currentItem.expiryDate && (
-                <p className="text-sm font-semibold text-amber-600 mt-1">出荷期限日: {currentItem.expiryDate}</p>
-              )}
-              <a
-                href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{display: 'inline-block', marginTop: '6px', fontSize: '12px', color: '#4A7A5A', textDecoration: 'underline', wordBreak: 'break-all'}}
-              >
-                {`https://orderie.jp/component/g/g${currentItem.productCd}`}
-              </a>
-            </div>
-
-            {/* 数量表示 */}
-            <div className="bg-stone-100 rounded-xl text-center py-4 mb-3">
-              <p className="text-xs text-stone-400 mb-1">実数量</p>
-              <p className="text-4xl font-bold tracking-widest text-stone-900">
-                {countState.qty || <span className="text-stone-300">-</span>}
-              </p>
-            </div>
-
-            {/* テンキー */}
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              {['7','8','9','4','5','6','1','2','3','⌫','0','送信'].map(k => (
-                <button
-                  key={k}
-                  onClick={() => {
-                    if (k === '⌫') keyPress('del');
-                    else if (k === '送信') submitItem();
-                    else keyPress(k);
-                  }}
-                  className={`py-4 text-xl font-medium rounded-xl border transition-all active:scale-95
-                    ${k === '送信'
-                      ? 'bg-[#1A3A2A] text-white border-transparent text-base'
-                      : k === '⌫'
-                      ? 'bg-white border-stone-200 text-stone-500 text-base'
-                      : 'bg-white border-stone-200 text-stone-900'}`}
-                >
-                  {k}
-                </button>
-              ))}
-            </div>
-
-            {/* 賞味期限（折りたたみ） */}
-            <div className="border border-stone-200 rounded-xl overflow-hidden">
-              <button
-                onClick={() => setCountState(prev => ({ ...prev, expiryOpen: !prev.expiryOpen }))}
-                className="w-full flex items-center justify-between px-4 py-3 text-sm text-stone-500"
-              >
-                <span>賞味期限を入力（任意）</span>
-                <span>{countState.expiryOpen ? '▲' : '▼'}</span>
-              </button>
-              {countState.expiryOpen && (
-                <div className="px-4 pb-4 border-t border-stone-100">
-                  <input
-                    type="date"
-                    value={countState.expiry}
-                    onChange={e => setCountState(prev => ({ ...prev, expiry: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg mt-3 outline-none focus:border-[#4A7A5A]"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* コメント */}
-            <div style={{marginTop: '8px'}}>
-              <label style={{display: 'block', fontSize: '12px', color: '#78716c', marginBottom: '4px'}}>コメント（任意）</label>
-              <textarea
-                value={countState.comment}
-                onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
-                placeholder="気になることがあれば記入"
-                rows={3}
-                style={{display: 'block', width: '100%', padding: '12px', fontSize: '14px', border: '2px solid #a8a29e', borderRadius: '12px', background: '#ffffff', outline: 'none', resize: 'none', boxSizing: 'border-box', color: '#1c1917'}}
-              />
-            </div>
-
-            {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
-          </>
-        )}
+        {/* count-input は外側の専用レイアウトで描画 */}
 
         {/* ── 商品追加 ── */}
         {screen === 'add-product' && (
