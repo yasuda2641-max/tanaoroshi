@@ -62,7 +62,7 @@ function ReportContent() {
 
   const addedRecords = records.filter(r => r.isAdded);
 
-  const filtered = diffRecords.filter(r => {
+  const filtered = records.filter(r => {
     if (filter === 'plus')      return r.diff > 0;
     if (filter === 'minus')     return r.diff < 0;
     if (filter === 'nocomment') return r.hasDiff && !r.comment;
@@ -169,7 +169,7 @@ function ReportContent() {
         {/* フィルタ */}
         <div className="flex gap-2 flex-wrap">
           {([
-            ['all',       `すべて（${diffRecords.length}）`],
+            ['all',       `すべて（${records.length}）`],
             ['plus',      `数量超過（${diffRecords.filter(r=>r.diff>0).length}）`],
             ['minus',     `数量不足（${diffRecords.filter(r=>r.diff<0).length}）`],
             ['nocomment', `コメント未記入（${noComment.length}）`],
@@ -191,7 +191,7 @@ function ReportContent() {
         {/* テーブル */}
         {loading ? <Loading /> : filtered.length === 0 ? (
           <Card className="p-0">
-            <EmptyState icon="✅" text={diffRecords.length === 0 ? '差異は見つかりませんでした' : '該当する差異がありません'} />
+            <EmptyState icon="✅" text={records.length === 0 ? '計数済みデータがありません' : '該当するデータがありません'} />
           </Card>
         ) : (
           <Card className="p-0 overflow-hidden">
