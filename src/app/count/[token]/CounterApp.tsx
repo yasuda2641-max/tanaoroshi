@@ -60,7 +60,22 @@ export default function CounterApp({ token }: { token: string }) {
       setSession(sess);
       // staffNameをlocalStorageから復元
       const saved = localStorage.getItem(`staff_${sess.id}`);
-      if (saved) { setStaffName(saved); setScreen('select-building'); }
+      if (saved) {
+        setStaffName(saved);
+        const savedShelf = localStorage.getItem(`shelf_${sess.id}`);
+        if (savedShelf) {
+          const { building: b, aisle: a, shelfKey: sk } = JSON.parse(savedShelf);
+          localStorage.removeItem(`shelf_${sess.id}`);
+          setBuilding(b); setAisle(a); setShelf(sk.split('-')[2] ?? ''); setShelfKey(sk);
+          const { getMasterItems: gmi, getCountRecords: gcr } = await import('@/lib/db');
+          const [all, recs] = await Promise.all([gmi(sess.id), gcr(sess.id)]);
+          setItems(all.filter(i => i.locationKey === sk));
+          setCounted(new Set(recs.filter(r => r.location.startsWith(sk)).map(r => r.masterItemId)));
+          setScreen('item-list');
+        } else {
+          setScreen('select-building');
+        }
+      }
       else setScreen('staff-input');
     }).catch(() => setScreen('error'));
   }, [token]);
@@ -152,6 +167,7 @@ export default function CounterApp({ token }: { token: string }) {
         masterLotNumber:   currentItem.lotNumber || undefined,
         comment:           countState.comment || undefined,
       });
+      localStorage.setItem(`shelf_${session.id}`, JSON.stringify({ building, aisle, shelfKey }));
       window.location.reload();
     } catch (e) {
       setError('送信に失敗しました: ' + String(e));
