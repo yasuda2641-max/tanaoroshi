@@ -40,6 +40,8 @@ function ReportContent() {
   const [causeCategory, setCauseCategory] = useState('');
   const [comment, setComment] = useState('');
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 100;
 
   useEffect(() => {
     listSessions().then(list => {
@@ -69,6 +71,8 @@ function ReportContent() {
     if (filter === 'added')     return r.isAdded;
     return true;
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function openComment(rec: CountRecord) {
     setModalRec(rec);
@@ -177,7 +181,7 @@ function ReportContent() {
           ] as [Filter, string][]).map(([f, label]) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => { setFilter(f); setPage(1); }}
               className={`px-3 py-1.5 text-sm rounded-full border transition-all
                 ${filter === f
                   ? 'bg-[#E8F0EC] border-[#4A7A5A] text-[#1A3A2A] font-medium'
@@ -205,7 +209,7 @@ function ReportContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(r => {
+                  {paged.map(r => {
                     const rate = r.systemQty > 0 ? ((r.diff / r.systemQty) * 100).toFixed(1) : '-';
                     return (
                       <tr key={r.id} className={`border-b border-stone-100 hover:bg-stone-50 ${r.recountOk ? 'bg-emerald-50/50' : ''}`}>
@@ -249,6 +253,51 @@ function ReportContent() {
               </table>
             </div>
           </Card>
+        )}
+
+        {/* ページネーション */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-stone-400">
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} 件 / 全{filtered.length}件
+            </span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 text-sm border border-stone-300 rounded-lg disabled:opacity-40 hover:bg-stone-50"
+              >
+                ← 前へ
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                .reduce<(number | '...')[]>((acc, p, i, arr) => {
+                  if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  p === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-stone-400 text-sm">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p as number)}
+                      className={`px-3 py-1.5 text-sm border rounded-lg ${page === p ? 'bg-[#1A3A2A] text-white border-[#1A3A2A]' : 'border-stone-300 hover:bg-stone-50'}`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 text-sm border border-stone-300 rounded-lg disabled:opacity-40 hover:bg-stone-50"
+              >
+                次へ →
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
