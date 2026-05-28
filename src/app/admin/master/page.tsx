@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
-import { listSessions, importMasterItems, getMasterItems, parseMasterCsv, fixWmsItems } from '@/lib/db';
+import { listSessions, importMasterItems, getMasterItems, parseMasterCsv, fixWmsItems, renameSession } from '@/lib/db';
 import type { InventorySession } from '@/types';
 import { Button, Card, Select, Alert, Loading } from '@/components/ui';
 
@@ -12,6 +12,8 @@ export default function MasterPage() {
   const [csvName, setCsvName] = useState('');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [editingName, setEditingName] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -24,8 +26,10 @@ export default function MasterPage() {
   useEffect(() => {
     if (!selectedId) return;
     setItemCount(null);
+    const s = sessions.find(s => s.id === selectedId);
+    setEditingName(s?.name ?? '');
     getMasterItems(selectedId).then(items => setItemCount(items.length));
-  }, [selectedId]);
+  }, [selectedId, sessions]);
 
   async function handleFile(file: File) {
     const buffer = await file.arrayBuffer();
@@ -77,6 +81,35 @@ export default function MasterPage() {
           <Select label="対象棚卸し" value={selectedId} onChange={e => setSelectedId(e.target.value)}>
             {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </Select>
+
+          {session && (
+            <div className="flex gap-2 items-center">
+              <input
+                className="flex-1 px-3 py-2 text-sm border border-stone-300 rounded-lg outline-none focus:border-[#4A7A5A]"
+                value={editingName}
+                onChange={e => setEditingName(e.target.value)}
+                placeholder="棚卸し名"
+              />
+              <Button
+                size="sm"
+                disabled={nameSaving || !editingName.trim() || editingName === session.name}
+                onClick={async () => {
+                  setNameSaving(true);
+                  try {
+                    await renameSession(selectedId, editingName.trim());
+                    setSessions(prev => prev.map(s => s.id === selectedId ? { ...s, name: editingName.trim() } : s));
+                    setMessage('✅ 棚卸し名を変更しました');
+                  } catch (e) {
+                    setMessage('❌ エラー: ' + String(e));
+                  } finally {
+                    setNameSaving(false);
+                  }
+                }}
+              >
+                {nameSaving ? '保存中...' : '名前を変更'}
+              </Button>
+            </div>
+          )}
 
           {session && (
             <div className="bg-stone-50 rounded-lg p-4 text-sm grid grid-cols-2 gap-2 border border-stone-200">

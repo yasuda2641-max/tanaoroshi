@@ -62,6 +62,10 @@ export async function completeSession(id: string) {
   await updateDoc(doc(db, COL_SESSIONS, id), { status: 'completed' });
 }
 
+export async function renameSession(id: string, name: string): Promise<void> {
+  await updateDoc(doc(db, COL_SESSIONS, id), { name });
+}
+
 function firestoreToSession(id: string, d: Record<string, unknown>): InventorySession {
   return {
     id,
