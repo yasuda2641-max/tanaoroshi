@@ -439,7 +439,7 @@ export default function CounterApp({ token }: { token: string }) {
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD / 識別CD ※</label>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD / 識別CD</label>
                 <input
                   value={addForm.productCd}
                   onChange={e => setAddForm(p => ({...p, productCd: e.target.value}))}
@@ -466,7 +466,7 @@ export default function CounterApp({ token }: { token: string }) {
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>数量 ※</label>
+                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>数量</label>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -481,8 +481,6 @@ export default function CounterApp({ token }: { token: string }) {
                 disabled={adding}
                 onClick={async () => {
                   if (!addForm.location.trim()) { setAddError('ロケーションを入力してください'); return; }
-                  if (!addForm.productCd.trim()) { setAddError('商品CD / 識別CDを入力してください'); return; }
-                  if (!addForm.qty) { setAddError('数量を入力してください'); return; }
                   setAdding(true);
                   setAddError('');
                   try {
@@ -499,7 +497,7 @@ export default function CounterApp({ token }: { token: string }) {
                       productCd: addForm.productCd.trim(),
                       productName: addForm.productName.trim(),
                       systemQty: 0,
-                      actualQty: parseInt(addForm.qty, 10),
+                      actualQty: parseInt(addForm.qty || '0', 10),
                       staffName,
                       masterExpiryDate: addForm.expiryDate.trim() || undefined,
                       isAdded: true,
