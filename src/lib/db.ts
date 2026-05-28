@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, getDoc, getDocs, updateDoc, query,
-  where, orderBy, serverTimestamp, Timestamp, writeBatch, increment
+  where, orderBy, serverTimestamp, Timestamp, writeBatch, increment, arrayUnion
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { InventorySession, MasterItem, CountRecord, ShelfProgress } from '@/types';
@@ -75,6 +75,7 @@ function firestoreToSession(id: string, d: Record<string, unknown>): InventorySe
     focusLocation: d.focusLocation as string | undefined,
     totalItems: d.totalItems as number,
     completedItems: d.completedItems as number,
+    completedShelfKeys: (d.completedShelfKeys as string[]) ?? [],
     createdAt:  (d.createdAt as Timestamp)?.toDate() ?? new Date(),
   };
 }
@@ -123,9 +124,13 @@ export async function getMasterItems(sessionId: string): Promise<MasterItem[]> {
 }
 
 export async function getShelvesForSession(sessionId: string): Promise<ShelfProgress[]> {
-  const items = await getMasterItems(sessionId);
-  const counts = await getCountRecords(sessionId);
-  const countedSet = new Set(counts.map(c => `${c.location}::${c.productCd}`));
+  const [items, counts, sessSnap] = await Promise.all([
+    getMasterItems(sessionId),
+    getCountRecords(sessionId),
+    getDoc(doc(db, COL_SESSIONS, sessionId)),
+  ]);
+  const countedSet = new Set(counts.map(c => c.masterItemId));
+  const completedShelfKeys = new Set<string>((sessSnap.data()?.completedShelfKeys as string[]) ?? []);
 
   const map = new Map<string, ShelfProgress>();
   for (const item of items) {
@@ -142,12 +147,16 @@ export async function getShelvesForSession(sessionId: string): Promise<ShelfProg
     }
     const prog = map.get(item.locationKey)!;
     prog.totalItems++;
-    if (countedSet.has(`${item.location}::${item.productCd}`)) {
-      prog.completedItems++;
-    }
-    prog.isCompleted = prog.completedItems === prog.totalItems;
+    if (countedSet.has(item.id)) prog.completedItems++;
+    prog.isCompleted = completedShelfKeys.has(item.locationKey);
   }
   return Array.from(map.values()).sort((a, b) => a.locationKey.localeCompare(b.locationKey));
+}
+
+export async function completeShelf(sessionId: string, shelfKey: string): Promise<void> {
+  await updateDoc(doc(db, COL_SESSIONS, sessionId), {
+    completedShelfKeys: arrayUnion(shelfKey),
+  });
 }
 
 // ── CountRecords ─────────────────────────────────

@@ -15,6 +15,7 @@ export interface InventorySession {
   focusLocation?: string;
   totalItems: number;
   completedItems: number;
+  completedShelfKeys?: string[];
 }
 
 export interface MasterItem {

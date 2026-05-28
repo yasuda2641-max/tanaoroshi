@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { getSessionByToken, getShelvesForSession, getMasterItems, submitCount, addMasterItem } from '@/lib/db';
+import { getSessionByToken, getShelvesForSession, getMasterItems, submitCount, addMasterItem, completeShelf } from '@/lib/db';
 import type { InventorySession, MasterItem, ShelfProgress } from '@/types';
 
 type Screen =
@@ -304,7 +304,11 @@ export default function CounterApp({ token }: { token: string }) {
                 </button>
                 {allDone && (
                   <button
-                    onClick={() => setScreen('shelf-complete')}
+                    onClick={async () => {
+                      await completeShelf(session!.id, shelfKey);
+                      await loadShelves();
+                      setScreen('shelf-complete');
+                    }}
                     className="px-4 py-2 bg-[#1A3A2A] text-white text-sm font-semibold rounded-lg"
                   >
                     完了にする
@@ -337,7 +341,11 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
             {!allDone && (
               <button
-                onClick={() => setScreen('shelf-complete')}
+                onClick={async () => {
+                  await completeShelf(session!.id, shelfKey);
+                  await loadShelves();
+                  setScreen('shelf-complete');
+                }}
                 className="w-full mt-4 py-3 border border-stone-300 text-stone-600 text-sm font-medium rounded-xl"
               >
                 この棚を完了にする
