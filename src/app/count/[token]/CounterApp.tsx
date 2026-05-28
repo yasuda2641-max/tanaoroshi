@@ -581,7 +581,7 @@ export default function CounterApp({ token }: { token: string }) {
                 ))}
             </div>
             <button
-              onClick={() => setScreen('select-building')}
+              onClick={() => setScreen('select-shelf')}
               className="w-full py-3 border border-stone-300 text-stone-700 font-medium rounded-xl text-sm"
             >
               別の棚へ
