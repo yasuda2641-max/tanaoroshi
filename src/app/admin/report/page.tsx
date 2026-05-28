@@ -118,8 +118,9 @@ function ReportContent() {
   }
 
   const session = sessions.find(s => s.id === selectedId);
+  const completedCount = records.length;
   const pct = session && session.totalItems > 0
-    ? Math.round((session.completedItems / session.totalItems) * 100)
+    ? Math.round((completedCount / session.totalItems) * 100)
     : 0;
 
   return (
@@ -164,7 +165,7 @@ function ReportContent() {
 
         {/* サマリー */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="完了アイテム" value={session?.completedItems ?? 0} sub={`全${session?.totalItems ?? 0}件中 ${pct}%`} />
+          <StatCard label="完了アイテム" value={completedCount} sub={`全${session?.totalItems ?? 0}件中 ${pct}%`} />
           <StatCard label="差異あり件数" value={diffRecords.length} accent={diffRecords.length > 0 ? 'text-red-600' : undefined} sub="完了済みから" />
           <StatCard label="コメント未記入" value={noComment.length} accent={noComment.length > 0 ? 'text-amber-600' : undefined} sub="差異件数中" />
           <StatCard label="進捗" value={`${pct}%`} sub={session?.status === 'completed' ? '完了' : '進行中'} />
