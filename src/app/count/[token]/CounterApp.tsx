@@ -55,7 +55,7 @@ export default function CounterApp({ token }: { token: string }) {
 
   // ロード
   useEffect(() => {
-    getSessionByToken(token).then(sess => {
+    getSessionByToken(token).then(async sess => {
       if (!sess) { setScreen('error'); return; }
       setSession(sess);
       // staffNameをlocalStorageから復元
