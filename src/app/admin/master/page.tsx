@@ -29,7 +29,15 @@ export default function MasterPage() {
 
   async function handleFile(file: File) {
     const buffer = await file.arrayBuffer();
-    const text = new TextDecoder('shift-jis').decode(buffer);
+    const bytes = new Uint8Array(buffer);
+    const hasUtf8Bom = bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
+    let text: string;
+    if (hasUtf8Bom) {
+      text = new TextDecoder('utf-8').decode(buffer);
+    } else {
+      const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+      text = utf8.includes('\uFFFD') ? new TextDecoder('shift-jis').decode(buffer) : utf8;
+    }
     setCsvRows(parseMasterCsv(text));
     setCsvName(file.name);
   }
