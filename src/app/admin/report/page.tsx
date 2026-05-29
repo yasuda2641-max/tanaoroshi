@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { listSessions, getCountRecords, updateComment, updateRecountOk } from '@/lib/db';
+import { listSessions, getCountRecords, getMasterItems, updateComment, updateRecountOk } from '@/lib/db';
 import type { InventorySession, CountRecord } from '@/types';
 import {
   Badge, Button, Card, Select, StatCard, Modal,
@@ -117,6 +117,37 @@ function ReportContent() {
     a.click();
   }
 
+  async function exportMasterAllCsv() {
+    if (!selectedId) return;
+    const [items, recs] = await Promise.all([getMasterItems(selectedId), Promise.resolve(records)]);
+    const recMap = new Map(recs.map(r => [r.masterItemId, r]));
+    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,出荷期限日,担当者,差異原因,コメント,リカウントOK,追加商品,計数日時\n';
+    const rows = items.map(item => {
+      const r = recMap.get(item.id);
+      const cols = [
+        item.location,
+        item.productCd,
+        `"${item.productName.replace(/"/g, '""')}"`,
+        item.systemQty,
+        r ? r.actualQty : '',
+        r ? r.diff : '',
+        item.expiryDate ?? '',
+        r ? r.staffName : '',
+        r ? (r.causeCategory ?? '') : '',
+        r ? `"${(r.comment ?? '').replace(/"/g, '""')}"` : '""',
+        r ? (r.recountOk ? 'OK' : '') : '',
+        r ? (r.isAdded ? '追加' : '') : '',
+        r && r.countedAt instanceof Date ? r.countedAt.toLocaleString('ja-JP') : '',
+      ];
+      return cols.join(',');
+    }).join('\n');
+    const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tanaoroshi_master_${selectedId.slice(0,8)}.csv`;
+    a.click();
+  }
+
   function exportAllCsv() {
     if (records.length === 0) { alert('計数データがありません。'); return; }
     const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,出荷期限日,担当者,差異原因,コメント,リカウントOK,追加商品,計数日時\n';
@@ -165,7 +196,8 @@ function ReportContent() {
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </Select>
-          <Button onClick={exportAllCsv} disabled={records.length === 0}>⬇ 全件CSV</Button>
+          <Button onClick={exportMasterAllCsv} disabled={!selectedId}>⬇ 全件CSV（未計数含む）</Button>
+          <Button onClick={exportAllCsv} disabled={records.length === 0}>⬇ 全件CSV（計数済み）</Button>
           <Button onClick={exportCsv} disabled={diffRecords.length === 0}>⬇ CSV（リカウントOKのみ）</Button>
         </div>
       </div>
