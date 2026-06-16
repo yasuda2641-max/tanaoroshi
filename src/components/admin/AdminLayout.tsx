@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
         <div className="px-5 py-4 border-t border-white/10">
-          <span className="text-white/30 text-xs">v1.0.0</span>
+          <span className="text-white/30 text-xs">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
         </div>
       </aside>
 

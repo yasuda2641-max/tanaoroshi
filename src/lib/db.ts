@@ -127,14 +127,20 @@ export async function getMasterItems(sessionId: string): Promise<MasterItem[]> {
     .sort((a, b) => a.location.localeCompare(b.location));
 }
 
-export async function getShelvesForSession(sessionId: string): Promise<ShelfProgress[]> {
+export async function getShelvesForSession(
+  sessionId: string,
+  knownCompletedShelfKeys?: string[]
+): Promise<ShelfProgress[]> {
+  const fetchCompleted = knownCompletedShelfKeys === undefined;
   const [items, counts, sessSnap] = await Promise.all([
     getMasterItems(sessionId),
     getCountRecords(sessionId),
-    getDoc(doc(db, COL_SESSIONS, sessionId)),
+    fetchCompleted ? getDoc(doc(db, COL_SESSIONS, sessionId)) : Promise.resolve(null),
   ]);
   const countedSet = new Set(counts.map(c => c.masterItemId));
-  const completedShelfKeys = new Set<string>((sessSnap.data()?.completedShelfKeys as string[]) ?? []);
+  const completedShelfKeys = new Set<string>(
+    knownCompletedShelfKeys ?? ((sessSnap?.data()?.completedShelfKeys as string[]) ?? [])
+  );
 
   const map = new Map<string, ShelfProgress>();
   for (const item of items) {
@@ -204,13 +210,10 @@ export async function submitCount(data: {
   if (!existing.empty) {
     await updateDoc(existing.docs[0].ref, payload);
   } else {
-    await addDoc(collection(db, COL_COUNTS), payload);
-    // completedItems インクリメント
-    const sessRef = doc(db, COL_SESSIONS, data.sessionId);
-    const sess = await getDoc(sessRef);
-    if (sess.exists()) {
-      await updateDoc(sessRef, { completedItems: (sess.data().completedItems ?? 0) + 1 });
-    }
+    const batch = writeBatch(db);
+    batch.set(doc(collection(db, COL_COUNTS)), payload);
+    batch.update(doc(db, COL_SESSIONS, data.sessionId), { completedItems: increment(1) });
+    await batch.commit();
   }
 }
 

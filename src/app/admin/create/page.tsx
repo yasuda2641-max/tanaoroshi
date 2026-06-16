@@ -2,7 +2,8 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSession, importMasterItems, parseMasterCsv } from '@/lib/db';
-import { Button, Card, Input, Select, Alert } from '@/components/ui';
+import { decodeCsvFile } from '@/lib/csv';
+import { Button, Card, Input, Select, Alert, CopyButton } from '@/components/ui';
 
 type Step = 1 | 2 | 3;
 type InvType = 'full' | 'focused';
@@ -24,21 +25,13 @@ export default function CreatePage() {
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const previewCount = type === 'focused' ? Math.floor(csvRows.length * 0.6) : csvRows.length;
+  const filteredRows = type === 'focused' && focusLocation.trim()
+    ? csvRows.filter(r => r.location.startsWith(focusLocation.trim()))
+    : csvRows;
+  const previewCount = filteredRows.length;
 
   async function handleCsvFile(file: File) {
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    const hasUtf8Bom = bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
-    let text: string;
-    if (hasUtf8Bom) {
-      text = new TextDecoder('utf-8').decode(buffer);
-    } else {
-      const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
-      const fffdCount = (utf8.match(/\uFFFD/g) ?? []).length;
-      const isShiftJis = fffdCount / utf8.length > 0.001;
-      text = isShiftJis ? new TextDecoder('shift-jis').decode(buffer) : utf8;
-    }
+    const text = await decodeCsvFile(file);
     const rows = parseMasterCsv(text);
     setCsvRows(rows);
     setCsvName(file.name);
@@ -59,7 +52,7 @@ export default function CreatePage() {
         focusDays: type === 'focused' ? focusDays : undefined,
         focusLocation: type === 'focused' ? focusLocation : undefined,
       });
-      await importMasterItems(id, csvRows);
+      await importMasterItems(id, filteredRows);
       // token 取得
       const { getSessionById } = await import('@/lib/db');
       const sess = await getSessionById(id);
@@ -166,7 +159,7 @@ export default function CreatePage() {
             </div>
 
             <div className="flex justify-end pt-2">
-              <Button variant="primary" onClick={() => { if (!name.trim()) { setError('棚卸し名を入力してください'); return; } setError(''); setStep(2); }}>
+              <Button variant="primary" onClick={() => { if (!name.trim()) { setError('棚卸し名を入力してください'); return; } if (endDate && endDate < startDate) { setError('終了日は開始日以降を設定してください'); return; } setError(''); setStep(2); }}>
                 次へ → マスタ取込
               </Button>
             </div>
@@ -248,7 +241,7 @@ export default function CreatePage() {
               <p className="text-sm text-stone-500 mb-6">下記URLを現場スタッフに共有してください</p>
               <div className="bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center gap-3 text-left mb-2">
                 <code className="text-sm text-stone-600 flex-1 break-all">{countUrl}</code>
-                <Button size="sm" onClick={() => navigator.clipboard.writeText(countUrl)}>コピー</Button>
+                <CopyButton text={countUrl} />
               </div>
               <p className="text-xs text-stone-400 mb-8">※ このURLを知っている人は誰でもアクセスできます。関係者のみに共有してください</p>
               <div className="flex justify-center gap-3">

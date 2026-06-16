@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { getSessionByToken, getShelvesForSession, getMasterItems, submitCount, addMasterItem, completeShelf } from '@/lib/db';
+import { getSessionByToken, getShelvesForSession, getMasterItems, getCountRecords, submitCount, addMasterItem, completeShelf } from '@/lib/db';
 import type { InventorySession, MasterItem, ShelfProgress } from '@/types';
 
 type Screen =
@@ -47,6 +47,7 @@ export default function CounterApp({ token }: { token: string }) {
   const [countState, setCountState]   = useState<CountState>({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
   const [submitting, setSubmitting]   = useState(false);
   const [error, setError]             = useState('');
+  const [qtyLimitHit, setQtyLimitHit] = useState(false);
 
   // 商品追加フォーム
   const [addForm, setAddForm] = useState({ dan: '', retsu: '', productCd: '', productName: '', qty: '', expiryDate: '' });
@@ -62,19 +63,7 @@ export default function CounterApp({ token }: { token: string }) {
       const saved = localStorage.getItem(`staff_${sess.id}`);
       if (saved) {
         setStaffName(saved);
-        const savedShelf = localStorage.getItem(`shelf_${sess.id}`);
-        if (savedShelf) {
-          const { building: b, aisle: a, shelfKey: sk } = JSON.parse(savedShelf);
-          localStorage.removeItem(`shelf_${sess.id}`);
-          setBuilding(b); setAisle(a); setShelf(sk.split('-')[2] ?? ''); setShelfKey(sk);
-          const { getMasterItems: gmi, getCountRecords: gcr } = await import('@/lib/db');
-          const [all, recs] = await Promise.all([gmi(sess.id), gcr(sess.id)]);
-          setItems(all.filter(i => i.locationKey === sk));
-          setCounted(new Set(recs.filter(r => r.location.startsWith(sk)).map(r => r.masterItemId)));
-          setScreen('item-list');
-        } else {
-          setScreen('select-building');
-        }
+        setScreen('select-building');
       }
       else setScreen('staff-input');
     }).catch(() => setScreen('error'));
@@ -84,7 +73,7 @@ export default function CounterApp({ token }: { token: string }) {
   const loadShelves = useCallback(async () => {
     if (!session) return;
     try {
-      const s = await getShelvesForSession(session.id);
+      const s = await getShelvesForSession(session.id, session.completedShelfKeys);
       setShelves(s);
     } catch (e) {
       setError('棚データの読み込みに失敗しました: ' + String(e));
@@ -125,7 +114,6 @@ export default function CounterApp({ token }: { token: string }) {
     setShelfKey(s.locationKey);
     await loadShelfItems(s.locationKey);
     // 計数済みアイテムを取得してSetに
-    const { getCountRecords } = await import('@/lib/db');
     const recs = await getCountRecords(session!.id);
     const set = new Set(recs.filter(r => r.location.startsWith(s.locationKey)).map(r => r.masterItemId));
     setCounted(set);
@@ -142,7 +130,11 @@ export default function CounterApp({ token }: { token: string }) {
   function keyPress(k: string) {
     setCountState(prev => {
       if (k === 'del') return { ...prev, qty: prev.qty.slice(0, -1) };
-      if (prev.qty.length >= 6) return prev;
+      if (prev.qty.length >= 6) {
+        setQtyLimitHit(true);
+        setTimeout(() => setQtyLimitHit(false), 500);
+        return prev;
+      }
       return { ...prev, qty: prev.qty + k };
     });
   }
@@ -167,8 +159,8 @@ export default function CounterApp({ token }: { token: string }) {
         masterLotNumber:   currentItem.lotNumber || undefined,
         comment:           countState.comment || undefined,
       });
-      localStorage.setItem(`shelf_${session.id}`, JSON.stringify({ building, aisle, shelfKey }));
-      window.location.reload();
+      setCounted(prev => new Set([...prev, currentItem.id]));
+      setScreen('item-list');
     } catch (e) {
       setError('送信に失敗しました: ' + String(e));
     } finally {
@@ -191,36 +183,37 @@ export default function CounterApp({ token }: { token: string }) {
 
       {/* ── 計数入力（フルハイト専用レイアウト） ── */}
       {screen === 'count-input' && currentItem && (
-        <div style={{height: 'calc(100dvh - 48px)', display: 'flex', flexDirection: 'column', padding: '8px 16px 12px', maxWidth: '448px', margin: '0 auto', boxSizing: 'border-box'}}>
+        <div className="flex flex-col h-[calc(100dvh-48px)] px-4 pt-2 pb-3 max-w-md mx-auto">
           <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} />
 
           {/* アイテム情報（コンパクト） */}
-          <div style={{marginBottom: '8px', flexShrink: 0}}>
-            <p style={{fontSize: '11px', color: '#a8a29e', marginBottom: '2px'}}>{currentItem.location} / {currentItem.productCd}</p>
-            <p style={{fontSize: '15px', fontWeight: 'bold', lineHeight: '1.3', color: '#1c1917'}}>{currentItem.productName}</p>
+          <div className="mb-2 shrink-0">
+            <p className="text-[11px] text-stone-400 mb-0.5">{currentItem.location} / {currentItem.productCd}</p>
+            <p className="text-[15px] font-bold leading-snug text-stone-950">{currentItem.productName}</p>
             {currentItem.expiryDate && (
-              <p style={{fontSize: '12px', color: '#d97706', marginTop: '2px'}}>出荷期限日: {currentItem.expiryDate}</p>
+              <p className="text-xs text-amber-600 mt-0.5">出荷期限日: {currentItem.expiryDate}</p>
             )}
             <a
               href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{fontSize: '11px', color: '#4A7A5A', textDecoration: 'underline'}}
+              className="text-[11px] text-[#4A7A5A] underline"
             >
               orderie で確認
             </a>
           </div>
 
           {/* 数量表示 */}
-          <div style={{background: '#f5f5f4', borderRadius: '12px', textAlign: 'center', padding: '10px', marginBottom: '8px', flexShrink: 0}}>
-            <p style={{fontSize: '11px', color: '#a8a29e', marginBottom: '2px'}}>実数量</p>
-            <p style={{fontSize: '48px', fontWeight: 'bold', letterSpacing: '4px', lineHeight: '1', color: '#1c1917'}}>
-              {countState.qty || <span style={{color: '#d6d3d1'}}>-</span>}
+          <div className={`rounded-xl text-center p-2.5 mb-2 shrink-0 transition-colors duration-150
+            ${qtyLimitHit ? 'bg-red-100' : 'bg-stone-100'}`}>
+            <p className="text-[11px] text-stone-400 mb-0.5">実数量{qtyLimitHit && <span className="text-red-500 ml-1">（上限6桁）</span>}</p>
+            <p className="text-5xl font-bold tracking-[4px] leading-none text-stone-950">
+              {countState.qty || <span className="text-stone-300">-</span>}
             </p>
           </div>
 
           {/* テンキー（flex-1で残りスペースを埋める） */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', flex: 1, minHeight: 0}}>
+          <div className="grid grid-cols-3 gap-1.5 flex-1 min-h-0">
             {['7','8','9','4','5','6','1','2','3','⌫','0','送信'].map(k => (
               <button
                 key={k}
@@ -229,22 +222,12 @@ export default function CounterApp({ token }: { token: string }) {
                   else if (k === '送信') submitItem();
                   else keyPress(k);
                 }}
-                style={{
-                  fontSize: k === '送信' || k === '⌫' ? '16px' : '22px',
-                  fontWeight: '500',
-                  borderRadius: '12px',
-                  border: k === '送信' ? 'none' : '1px solid #e7e5e4',
-                  background: k === '送信' ? '#1A3A2A' : k === '⌫' ? '#f5f5f4' : '#ffffff',
-                  color: k === '送信' ? '#ffffff' : k === '⌫' ? '#78716c' : '#1c1917',
-                  cursor: 'pointer',
-                  width: '100%',
-                  height: '100%',
-                  transition: 'transform 0.08s',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-                onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.95)')}
-                onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
-                onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                className={`w-full h-full rounded-xl font-medium transition-transform duration-75 active:scale-95
+                  ${k === '送信'
+                    ? 'bg-[#1A3A2A] text-white text-base border-0'
+                    : k === '⌫'
+                    ? 'bg-stone-100 text-stone-500 text-base border border-stone-200'
+                    : 'bg-white text-stone-950 text-[22px] border border-stone-200'}`}
               >
                 {k}
               </button>
@@ -252,34 +235,34 @@ export default function CounterApp({ token }: { token: string }) {
           </div>
 
           {/* 賞味期限・コメント（折りたたみ） */}
-          <div style={{flexShrink: 0, marginTop: '8px'}}>
+          <div className="shrink-0 mt-2">
             <button
               onClick={() => setCountState(prev => ({ ...prev, expiryOpen: !prev.expiryOpen }))}
-              style={{width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: '13px', color: '#78716c', background: '#f5f5f4', borderRadius: '10px', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between'}}
+              className="w-full text-left px-3 py-2 text-[13px] text-stone-500 bg-stone-100 rounded-[10px] flex justify-between"
             >
               <span>賞味期限 / コメント（任意）</span>
               <span>{countState.expiryOpen ? '▲' : '▼'}</span>
             </button>
             {countState.expiryOpen && (
-              <div style={{marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+              <div className="mt-1.5 flex flex-col gap-1.5">
                 <input
                   type="date"
                   value={countState.expiry}
                   onChange={e => setCountState(prev => ({ ...prev, expiry: e.target.value }))}
-                  style={{width: '100%', padding: '8px 12px', fontSize: '14px', border: '1px solid #d6d3d1', borderRadius: '10px', outline: 'none', boxSizing: 'border-box'}}
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-[10px] outline-none"
                 />
                 <textarea
                   value={countState.comment}
                   onChange={e => setCountState(prev => ({ ...prev, comment: e.target.value }))}
                   placeholder="コメント（任意）"
                   rows={2}
-                  style={{width: '100%', padding: '8px 12px', fontSize: '14px', border: '1px solid #d6d3d1', borderRadius: '10px', outline: 'none', resize: 'none', boxSizing: 'border-box'}}
+                  className="w-full px-3 py-2 text-sm border border-stone-300 rounded-[10px] outline-none resize-none"
                 />
               </div>
             )}
           </div>
 
-          {error && <p style={{fontSize: '12px', color: '#ef4444', marginTop: '4px'}}>{error}</p>}
+          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
       )}
 
@@ -464,68 +447,68 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
             <div className="space-y-4">
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'8px'}}>ロケーション ※</label>
-                <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                  <div style={{padding:'12px 14px',fontSize:'16px',fontWeight:'600',background:'#f5f5f4',border:'2px solid #e7e5e4',borderRadius:'12px',color:'#57534e',whiteSpace:'nowrap'}}>
+                <label className="block text-xs text-stone-500 mb-2">ロケーション ※</label>
+                <div className="flex items-center gap-1.5">
+                  <div className="px-3.5 py-3 text-base font-semibold bg-stone-100 border-2 border-stone-200 rounded-xl text-stone-600 whitespace-nowrap">
                     {shelfKey}
                   </div>
-                  <span style={{fontSize:'18px',color:'#a8a29e',fontWeight:'bold'}}>-</span>
+                  <span className="text-lg text-stone-400 font-bold">-</span>
                   <input
                     value={addForm.dan}
                     onChange={e => setAddForm(p => ({...p, dan: e.target.value}))}
                     placeholder="段"
                     inputMode="numeric"
-                    style={{width:'64px',padding:'12px 8px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box',textAlign:'center'}}
+                    className="w-16 py-3 px-2 text-base border-2 border-stone-300 rounded-xl outline-none text-center"
                   />
-                  <span style={{fontSize:'18px',color:'#a8a29e',fontWeight:'bold'}}>-</span>
+                  <span className="text-lg text-stone-400 font-bold">-</span>
                   <input
                     value={addForm.retsu}
                     onChange={e => setAddForm(p => ({...p, retsu: e.target.value}))}
                     placeholder="列"
                     inputMode="numeric"
-                    style={{width:'64px',padding:'12px 8px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box',textAlign:'center'}}
+                    className="w-16 py-3 px-2 text-base border-2 border-stone-300 rounded-xl outline-none text-center"
                   />
                 </div>
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品CD / 識別CD</label>
+                <label className="block text-xs text-stone-500 mb-1">商品CD / 識別CD</label>
                 <input
                   value={addForm.productCd}
                   onChange={e => setAddForm(p => ({...p, productCd: e.target.value}))}
                   placeholder="例: 00127"
-                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                  className="block w-full p-3 text-base border-2 border-stone-300 rounded-xl outline-none"
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>商品名</label>
+                <label className="block text-xs text-stone-500 mb-1">商品名</label>
                 <input
                   value={addForm.productName}
                   onChange={e => setAddForm(p => ({...p, productName: e.target.value}))}
                   placeholder="例: 金太洋 栗甘露煮"
-                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                  className="block w-full p-3 text-base border-2 border-stone-300 rounded-xl outline-none"
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>出荷期限日</label>
+                <label className="block text-xs text-stone-500 mb-1">出荷期限日</label>
                 <input
                   type="date"
                   value={addForm.expiryDate}
                   onChange={e => setAddForm(p => ({...p, expiryDate: e.target.value}))}
-                  style={{display:'block',width:'100%',padding:'12px',fontSize:'16px',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box'}}
+                  className="block w-full p-3 text-base border-2 border-stone-300 rounded-xl outline-none"
                 />
               </div>
               <div>
-                <label style={{display:'block',fontSize:'12px',color:'#78716c',marginBottom:'4px'}}>数量</label>
+                <label className="block text-xs text-stone-500 mb-1">数量</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={addForm.qty}
                   onChange={e => setAddForm(p => ({...p, qty: e.target.value}))}
                   placeholder="0"
-                  style={{display:'block',width:'100%',padding:'12px',fontSize:'24px',fontWeight:'bold',border:'2px solid #d6d3d1',borderRadius:'12px',outline:'none',boxSizing:'border-box',textAlign:'center'}}
+                  className="block w-full p-3 text-2xl font-bold border-2 border-stone-300 rounded-xl outline-none text-center"
                 />
               </div>
-              {addError && <p style={{fontSize:'12px',color:'#ef4444'}}>{addError}</p>}
+              {addError && <p className="text-xs text-red-500">{addError}</p>}
               <button
                 disabled={adding}
                 onClick={async () => {
@@ -560,7 +543,7 @@ export default function CounterApp({ token }: { token: string }) {
                     setAdding(false);
                   }
                 }}
-                style={{display:'block',width:'100%',padding:'16px',background:'#1A3A2A',color:'white',fontWeight:'bold',fontSize:'16px',borderRadius:'12px',border:'none',cursor:'pointer'}}
+                className="block w-full py-4 bg-[#1A3A2A] text-white font-bold text-base rounded-xl disabled:opacity-50 active:scale-[0.98] transition-transform"
               >
                 {adding ? '追加中...' : '追加する'}
               </button>

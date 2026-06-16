@@ -1,13 +1,19 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
 import { listSessions, importMasterItems, getMasterItems, parseMasterCsv, fixWmsItems, renameSession } from '@/lib/db';
-import type { InventorySession } from '@/types';
+import { decodeCsvFile } from '@/lib/csv';
+import type { InventorySession, MasterItem } from '@/types';
 import { Button, Card, Select, Alert, Loading } from '@/components/ui';
+
+const PREVIEW_PAGE_SIZE = 50;
 
 export default function MasterPage() {
   const [sessions, setSessions] = useState<InventorySession[]>([]);
   const [selectedId, setSelectedId] = useState('');
-  const [itemCount, setItemCount] = useState<number | null>(null);
+  const [masterItems, setMasterItems] = useState<MasterItem[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemPage, setItemPage] = useState(1);
   const [csvRows, setCsvRows] = useState<ReturnType<typeof parseMasterCsv>>([]);
   const [csvName, setCsvName] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -25,25 +31,20 @@ export default function MasterPage() {
 
   useEffect(() => {
     if (!selectedId) return;
-    setItemCount(null);
+    setMasterItems([]);
+    setItemSearch('');
+    setItemPage(1);
+    setItemsLoading(true);
     const s = sessions.find(s => s.id === selectedId);
     setEditingName(s?.name ?? '');
-    getMasterItems(selectedId).then(items => setItemCount(items.length));
+    getMasterItems(selectedId).then(items => {
+      setMasterItems(items);
+      setItemsLoading(false);
+    });
   }, [selectedId, sessions]);
 
   async function handleFile(file: File) {
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    const hasUtf8Bom = bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF;
-    let text: string;
-    if (hasUtf8Bom) {
-      text = new TextDecoder('utf-8').decode(buffer);
-    } else {
-      const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
-      const fffdCount = (utf8.match(/\uFFFD/g) ?? []).length;
-      const isShiftJis = fffdCount / utf8.length > 0.001;
-      text = isShiftJis ? new TextDecoder('shift-jis').decode(buffer) : utf8;
-    }
+    const text = await decodeCsvFile(file);
     setCsvRows(parseMasterCsv(text));
     setCsvName(file.name);
   }
@@ -54,8 +55,11 @@ export default function MasterPage() {
     setMessage('');
     try {
       await importMasterItems(selectedId, csvRows);
-      setItemCount(csvRows.length);
-      setMessage(`✅ ${csvRows.length}件を再取込しました（${new Date().toLocaleTimeString()}）`);
+      const refreshed = await getMasterItems(selectedId);
+      setMasterItems(refreshed);
+      setItemSearch('');
+      setItemPage(1);
+      setMessage(`✅ ${refreshed.length}件を再取込しました（${new Date().toLocaleTimeString()}）`);
       setCsvRows([]);
       setCsvName('');
     } catch (e) {
@@ -119,7 +123,7 @@ export default function MasterPage() {
                 </span>
               </div>
               <div><span className="text-stone-400">登録件数：</span>
-                {itemCount === null ? '読込中...' : `${itemCount}件`}
+                {itemsLoading ? '読込中...' : `${masterItems.length}件`}
               </div>
               <div><span className="text-stone-400">開始日：</span>{session.startDate}</div>
               <div><span className="text-stone-400">種別：</span>{session.type === 'full' ? '一斉' : '重点'}</div>
@@ -179,6 +183,84 @@ export default function MasterPage() {
             WMSロケーション修復
           </Button>
         </Card>
+
+        {/* アイテムプレビュー */}
+        {selectedId && (
+          <Card className="p-0 overflow-hidden">
+            <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between gap-3">
+              <h2 className="font-bold text-sm text-stone-900 shrink-0">
+                マスタアイテム一覧
+                {!itemsLoading && <span className="text-stone-400 font-normal ml-2">（{masterItems.length}件）</span>}
+              </h2>
+              <input
+                type="text"
+                value={itemSearch}
+                onChange={e => { setItemSearch(e.target.value); setItemPage(1); }}
+                placeholder="ロケーション・商品CD・商品名で検索"
+                className="flex-1 max-w-xs px-3 py-1.5 text-sm border border-stone-300 rounded-md outline-none focus:border-[#4A7A5A]"
+              />
+            </div>
+            {itemsLoading ? (
+              <Loading />
+            ) : (() => {
+              const q = itemSearch.toLowerCase();
+              const filtered = q
+                ? masterItems.filter(i =>
+                    i.location.toLowerCase().includes(q) ||
+                    i.productCd.toLowerCase().includes(q) ||
+                    i.productName.toLowerCase().includes(q)
+                  )
+                : masterItems;
+              const totalPages = Math.max(1, Math.ceil(filtered.length / PREVIEW_PAGE_SIZE));
+              const paged = filtered.slice((itemPage - 1) * PREVIEW_PAGE_SIZE, itemPage * PREVIEW_PAGE_SIZE);
+              return filtered.length === 0 ? (
+                <div className="text-center py-8 text-stone-400 text-sm">
+                  {masterItems.length === 0 ? 'データがありません' : '該当するアイテムがありません'}
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-stone-50 border-b border-stone-200">
+                          {['ロケーション','商品CD','商品名','保管中','ピッキング中','出荷期限日'].map(h => (
+                            <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paged.map(item => (
+                          <tr key={item.id} className="border-b border-stone-100 hover:bg-stone-50">
+                            <td className="px-3 py-2.5 font-mono text-xs text-stone-600">{item.location}</td>
+                            <td className="px-3 py-2.5 font-mono text-xs text-stone-600">{item.productCd}</td>
+                            <td className="px-3 py-2.5 text-stone-800 max-w-[200px] truncate" title={item.productName}>{item.productName}</td>
+                            <td className="px-3 py-2.5 text-right text-stone-700">{item.systemQty}</td>
+                            <td className="px-3 py-2.5 text-right text-stone-400">{item.pickingQty}</td>
+                            <td className="px-3 py-2.5 text-xs text-stone-500">{item.expiryDate ?? '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="px-4 py-3 border-t border-stone-100 flex items-center justify-between">
+                      <span className="text-xs text-stone-400">
+                        {(itemPage - 1) * PREVIEW_PAGE_SIZE + 1}–{Math.min(itemPage * PREVIEW_PAGE_SIZE, filtered.length)} 件 / 全{filtered.length}件
+                      </span>
+                      <div className="flex gap-1">
+                        <button onClick={() => setItemPage(p => Math.max(1, p - 1))} disabled={itemPage === 1}
+                          className="px-2.5 py-1 text-xs border border-stone-300 rounded disabled:opacity-40 hover:bg-stone-50">← 前へ</button>
+                        <span className="px-2.5 py-1 text-xs text-stone-500">{itemPage} / {totalPages}</span>
+                        <button onClick={() => setItemPage(p => Math.min(totalPages, p + 1))} disabled={itemPage === totalPages}
+                          className="px-2.5 py-1 text-xs border border-stone-300 rounded disabled:opacity-40 hover:bg-stone-50">次へ →</button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </Card>
+        )}
 
         {/* フォーマット仕様 */}
         <Card className="p-6">

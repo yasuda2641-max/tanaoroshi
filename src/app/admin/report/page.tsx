@@ -5,7 +5,7 @@ import { listSessions, getCountRecords, getMasterItems, updateComment, updateRec
 import type { InventorySession, CountRecord } from '@/types';
 import {
   Badge, Button, Card, Select, StatCard, Modal,
-  Textarea, Loading, EmptyState, Alert
+  Textarea, Loading, EmptyState, Alert, CopyButton, TableSkeleton
 } from '@/components/ui';
 
 type Filter = 'all' | 'plus' | 'minus' | 'comment' | 'added';
@@ -100,7 +100,7 @@ function ReportContent() {
   function exportCsv() {
     const okRecords = diffRecords.filter(r => r.recountOk);
     if (okRecords.length === 0) { alert('リカウントOKの件数が0件です。'); return; }
-    const filterLabel = filter === 'all' ? 'すべて' : filter === 'plus' ? '数量超過' : filter === 'minus' ? '数量不足' : 'コメント未記入';
+    const filterLabel = filter === 'all' ? 'すべて' : filter === 'plus' ? '数量超過' : filter === 'minus' ? '数量不足' : filter === 'added' ? '追加商品' : 'コメントあり';
     const bikou = `${session?.name ?? ''}_${filterLabel}`;
     const header = '倉庫ID,商品コード,強制出庫,ロケーション,出荷期限日,ロット番号,強制出庫,備考\n';
     const rows = okRecords.map(r => {
@@ -215,12 +215,7 @@ function ReportContent() {
             >
               {typeof window !== 'undefined' ? `${window.location.origin}/count/${session.token}` : `/count/${session.token}`}
             </a>
-            <button
-              onClick={() => navigator.clipboard.writeText(`${window.location.origin}/count/${session.token}`)}
-              className="text-xs px-2 py-1 bg-white border border-stone-300 rounded text-stone-500 hover:border-stone-400 shrink-0"
-            >
-              コピー
-            </button>
+            <CopyButton text={`${window.location.origin}/count/${session.token}`} />
           </div>
         )}
 
@@ -255,7 +250,9 @@ function ReportContent() {
         </div>
 
         {/* テーブル */}
-        {loading ? <Loading /> : filtered.length === 0 ? (
+        {loading ? (
+          <Card className="p-0 overflow-hidden"><TableSkeleton rows={8} cols={11} /></Card>
+        ) : filtered.length === 0 ? (
           <Card className="p-0">
             <EmptyState icon="✅" text={records.length === 0 ? '計数済みデータがありません' : '該当するデータがありません'} />
           </Card>
@@ -265,7 +262,7 @@ function ReportContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','出荷期限日','担当者','原因コメント','リカウントOK',''].map(h => (
+                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','差異率','出荷期限日','担当者','原因コメント','リカウントOK',''].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -288,6 +285,7 @@ function ReportContent() {
                         <td className="px-3 py-3 text-right text-stone-600">{r.systemQty}</td>
                         <td className="px-3 py-3 text-right font-semibold text-stone-900">{r.actualQty}</td>
                         <td className="px-3 py-3 text-center"><DiffValue diff={r.diff} /></td>
+                        <td className="px-3 py-3 text-center text-xs text-stone-500">{rate !== '-' ? `${rate}%` : '-'}</td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.masterExpiryDate ?? '-'}</td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.staffName}</td>
                         <td className="px-3 py-3 max-w-[160px]">

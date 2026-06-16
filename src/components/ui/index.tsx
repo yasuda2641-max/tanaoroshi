@@ -177,6 +177,59 @@ export function Loading({ text = '読み込み中...' }: { text?: string }) {
   );
 }
 
+// ── TableSkeleton ─────────────────────────────────
+export function TableSkeleton({ rows = 5, cols = 6 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-stone-50 border-b border-stone-200">
+            {Array.from({ length: cols }).map((_, i) => (
+              <th key={i} className="px-3 py-3">
+                <div className="h-3 bg-stone-200 rounded animate-pulse" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }).map((_, r) => (
+            <tr key={r} className="border-b border-stone-100">
+              {Array.from({ length: cols }).map((_, c) => (
+                <td key={c} className="px-3 py-3">
+                  <div className={`h-3 bg-stone-100 rounded animate-pulse ${c === 2 ? 'w-32' : 'w-16'}`} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── CopyButton ────────────────────────────────────
+export function CopyButton({ text, label = 'コピー', className = '' }: { text: string; label?: string; className?: string }) {
+  const [copied, setCopied] = React.useState(false);
+  function handleCopy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className={`text-xs px-2 py-1 rounded border transition-all shrink-0
+        ${copied
+          ? 'bg-emerald-50 border-emerald-400 text-emerald-700'
+          : 'bg-white border-stone-300 text-stone-500 hover:border-stone-400'}
+        ${className}`}
+    >
+      {copied ? '✓ コピーしました' : label}
+    </button>
+  );
+}
+
 // ── EmptyState ────────────────────────────────────
 export function EmptyState({ icon, text }: { icon?: string; text: string }) {
   return (

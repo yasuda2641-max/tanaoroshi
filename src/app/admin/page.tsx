@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { listSessions } from '@/lib/db';
 import type { InventorySession } from '@/types';
-import { Badge, Button, Card, Loading, EmptyState, ProgressBar } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, ProgressBar, TableSkeleton } from '@/components/ui';
 
 function statusBadge(status: InventorySession['status']) {
   return status === 'active'
@@ -43,7 +43,7 @@ export default function AdminPage() {
         </div>
 
         {loading ? (
-          <Loading />
+          <Card className="p-0 overflow-hidden"><TableSkeleton rows={4} cols={7} /></Card>
         ) : sessions.length === 0 ? (
           <Card className="p-0 overflow-hidden">
             <EmptyState icon="📦" text="棚卸しがまだありません。「新規作成」から始めましょう。" />
