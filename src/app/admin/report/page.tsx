@@ -67,13 +67,13 @@ function ReportContent() {
 
   const addedRecords = records.filter(r => r.isAdded);
 
-  const recountRecords = records.filter(r => r.isRecounted);
+  const recountRecords = records.filter(r => r.hasDiff);
 
   const filtered = records.filter(r => {
     if (filter === 'plus')      return r.diff > 0;
     if (filter === 'minus')     return r.diff < 0;
     if (filter === 'added')     return r.isAdded;
-    if (filter === 'recount')   return !!r.isRecounted;
+    if (filter === 'recount')   return !!r.hasDiff;
     if (filter === 'comment')   return !!r.comment;
     return true;
   });
