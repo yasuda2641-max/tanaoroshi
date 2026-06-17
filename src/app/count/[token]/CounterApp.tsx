@@ -208,10 +208,10 @@ export default function CounterApp({ token }: { token: string }) {
 
   const allShelfItems  = [...items].sort((a, b) => a.location.localeCompare(b.location));
   const shelfItems     = isRecountMode
-    ? allShelfItems.filter(i => { const c = counted.get(i.id); return c && c.diff !== 0 && !c.isRecounted && !c.isAdded; })
+    ? allShelfItems.filter(i => { const c = counted.get(i.id); return c && c.diff !== 0 && !c.isRecounted; })
     : allShelfItems;
   const doneCount      = allShelfItems.filter(i => counted.has(i.id)).length;
-  const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
+  const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted).length;
   const allDone        = allShelfItems.length > 0 && doneCount === allShelfItems.length && diffUnresolved === 0;
 
   // allDone になったら自動的に棚を完了にする（宣言後に配置してTDZを回避）
@@ -550,7 +550,7 @@ export default function CounterApp({ token }: { token: string }) {
               {shelfItems.map(item => {
                 const info = counted.get(item.id);
                 const done = !!info;
-                const hasDiff            = done && info.diff !== 0 && !info.isAdded;
+                const hasDiff            = done && info.diff !== 0;
                 const unrecounted        = hasDiff && !info.isRecounted;
                 const recountedWithDiff  = hasDiff && info.isRecounted;
                 const recountedResolved  = done && info.isRecounted && !hasDiff;

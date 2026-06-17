@@ -163,7 +163,7 @@ export async function getShelvesForSession(
     if (countedSet.has(item.id)) prog.completedItems++;
     prog.isCompleted = completedShelfKeys.has(item.locationKey);
     const rec = countMap.get(item.id);
-    if (rec && rec.hasDiff && !rec.isAdded) {
+    if (rec && rec.hasDiff) {
       if (rec.isRecounted) prog.recountedCount++;
       else prog.pendingRecountCount++;
     }
