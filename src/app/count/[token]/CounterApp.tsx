@@ -578,22 +578,19 @@ export default function CounterApp({ token }: { token: string }) {
                 const info = counted.get(item.id);
                 const done = !!info;
                 const hasDiff = done && info.diff !== 0 && !info.isAdded;
-                const unrecounted = hasDiff && !info.isRecounted;       // 差異あり・未リカウント
-                const stillDiff   = hasDiff && info.isRecounted;        // リカウント済・差異継続
-                const resolved    = done && info.isRecounted && (info.diff === 0 || info.isAdded); // リカウント済・解消済
+                const unrecounted = hasDiff && !info.isRecounted;  // 差異あり・未リカウント
+                const recounted   = done && info.isRecounted;      // リカウント済（差異有無問わず）
                 return (
                   <div
                     key={`${item.location}::${item.productCd}`}
                     onClick={() => openItem(item)}
                     className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors
                       ${unrecounted ? 'bg-amber-50 border-amber-200 active:bg-amber-100'
-                      : stillDiff   ? 'bg-red-50 border-red-200 active:bg-red-100'
                       : 'bg-white border-stone-200 active:bg-stone-50'}`}
                   >
                     <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0
-                      ${!done        ? 'bg-stone-300'
-                      : unrecounted  ? 'bg-amber-400'
-                      : stillDiff    ? 'bg-red-400'
+                      ${!done       ? 'bg-stone-300'
+                      : unrecounted ? 'bg-amber-400'
                       : 'bg-emerald-500'}`}
                     />
                     <div className="flex-1 min-w-0">
@@ -605,22 +602,16 @@ export default function CounterApp({ token }: { token: string }) {
                           差異 {info.diff > 0 ? `+${info.diff}` : info.diff} ／ タップしてリカウント
                         </p>
                       )}
-                      {stillDiff && (
-                        <p className="text-xs text-red-600 font-medium mt-0.5">
-                          リカウント後も差異 {info.diff > 0 ? `+${info.diff}` : info.diff}
-                        </p>
-                      )}
-                      {resolved && (
-                        <p className="text-xs text-emerald-600 font-medium mt-0.5">リカウント済・解消</p>
+                      {recounted && (
+                        <p className="text-xs text-emerald-600 font-medium mt-0.5">リカウント済</p>
                       )}
                     </div>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0
                       ${!done       ? 'bg-stone-100 text-stone-500'
                       : unrecounted ? 'bg-amber-100 text-amber-700'
-                      : stillDiff   ? 'bg-red-100 text-red-600'
-                      : resolved    ? 'bg-emerald-50 text-emerald-700'
+                      : recounted   ? 'bg-blue-50 text-blue-600'
                       : 'bg-emerald-50 text-emerald-700'}`}>
-                      {!done ? '未' : unrecounted ? '差異あり' : stillDiff ? '差異継続' : resolved ? '解消済' : '済'}
+                      {!done ? '未' : unrecounted ? '差異あり' : recounted ? 'リカウント済' : '済'}
                     </span>
                   </div>
                 );
