@@ -89,7 +89,7 @@ export default function MasterPage() {
           {session && (
             <div className="flex gap-2 items-center">
               <input
-                className="flex-1 px-3 py-2 text-sm border border-stone-300 rounded-lg outline-none focus:border-[#4A7A5A]"
+                className="flex-1 px-3 py-2 text-sm border border-stone-300 rounded-lg outline-none focus:border-stone-500"
                 value={editingName}
                 onChange={e => setEditingName(e.target.value)}
                 placeholder="棚卸し名"
@@ -144,7 +144,7 @@ export default function MasterPage() {
             onDrop={e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); }}
             onDragOver={e => e.preventDefault()}
             className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all
-              ${csvRows.length > 0 ? 'border-emerald-400 bg-emerald-50' : 'border-stone-300 hover:border-[#4A7A5A]'}`}
+              ${csvRows.length > 0 ? 'border-emerald-400 bg-emerald-50' : 'border-stone-300 hover:border-stone-500'}`}
           >
             <div className="text-3xl mb-2">{csvRows.length > 0 ? '✅' : '📂'}</div>
             {csvRows.length > 0 ? (
@@ -197,7 +197,7 @@ export default function MasterPage() {
                 value={itemSearch}
                 onChange={e => { setItemSearch(e.target.value); setItemPage(1); }}
                 placeholder="ロケーション・商品CD・商品名で検索"
-                className="flex-1 max-w-xs px-3 py-1.5 text-sm border border-stone-300 rounded-md outline-none focus:border-[#4A7A5A]"
+                className="flex-1 max-w-xs px-3 py-1.5 text-sm border border-stone-300 rounded-md outline-none focus:border-stone-500"
               />
             </div>
             {itemsLoading ? (

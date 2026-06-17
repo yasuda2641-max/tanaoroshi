@@ -21,7 +21,7 @@ export function Badge({ variant, children }: { variant: BadgeVariant; children: 
 // ── Button ───────────────────────────────────────
 type BtnVariant = 'primary' | 'outline' | 'danger' | 'ghost';
 const btnStyles: Record<BtnVariant, string> = {
-  primary: 'bg-[#1A3A2A] text-white hover:bg-[#2a5a3a] border-transparent',
+  primary: 'bg-stone-900 text-white hover:bg-stone-700 border-transparent',
   outline: 'bg-transparent text-stone-800 border-stone-300 hover:bg-stone-100',
   danger:  'bg-red-600 text-white hover:bg-red-700 border-transparent',
   ghost:   'bg-transparent text-stone-500 border-transparent hover:bg-stone-100',
@@ -63,7 +63,7 @@ export function Input({ label, hint, error, className = '', ...props }: InputPro
       {label && <label className="block text-xs font-medium text-stone-500">{label}</label>}
       <input
         className={`w-full px-3 py-2 text-sm border rounded-md outline-none transition-colors
-          border-stone-300 focus:border-[#4A7A5A] bg-white text-stone-900 placeholder:text-stone-400
+          border-stone-300 focus:border-stone-500 bg-white text-stone-900 placeholder:text-stone-400
           ${error ? 'border-red-400' : ''} ${className}`}
         {...props}
       />
@@ -83,7 +83,7 @@ export function Select({ label, className = '', children, ...props }: SelectProp
       {label && <label className="block text-xs font-medium text-stone-500">{label}</label>}
       <select
         className={`w-full px-3 py-2 text-sm border border-stone-300 rounded-md outline-none
-          focus:border-[#4A7A5A] bg-white text-stone-900 cursor-pointer ${className}`}
+          focus:border-stone-500 bg-white text-stone-900 cursor-pointer ${className}`}
         {...props}
       >
         {children}
@@ -102,7 +102,7 @@ export function Textarea({ label, className = '', ...props }: TextareaProps) {
       {label && <label className="block text-xs font-medium text-stone-500">{label}</label>}
       <textarea
         className={`w-full px-3 py-2 text-sm border border-stone-300 rounded-md outline-none
-          focus:border-[#4A7A5A] bg-white text-stone-900 resize-vertical ${className}`}
+          focus:border-stone-500 bg-white text-stone-900 resize-vertical ${className}`}
         {...props}
       />
     </div>
@@ -145,7 +145,7 @@ export function ProgressBar({ value }: { value: number }) {
   const pct = Math.min(100, Math.max(0, value));
   return (
     <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden w-full">
-      <div className="h-full bg-[#4A7A5A] rounded-full transition-all" style={{ width: `${pct}%` }} />
+      <div className="h-full bg-stone-700 rounded-full transition-all" style={{ width: `${pct}%` }} />
     </div>
   );
 }

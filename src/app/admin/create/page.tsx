@@ -82,9 +82,9 @@ export default function CreatePage() {
           {([1,2,3] as Step[]).map((s, i) => (
             <div key={s} className="flex items-center">
               <div className={`flex items-center gap-2 text-sm
-                ${step === s ? 'text-[#1A3A2A] font-semibold' : step > s ? 'text-emerald-600' : 'text-stone-400'}`}>
+                ${step === s ? 'text-stone-900 font-semibold' : step > s ? 'text-emerald-600' : 'text-stone-400'}`}>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                  ${step === s ? 'bg-[#1A3A2A] text-white' : step > s ? 'bg-emerald-500 text-white' : 'bg-stone-200 text-stone-400'}`}>
+                  ${step === s ? 'bg-stone-900 text-white' : step > s ? 'bg-emerald-500 text-white' : 'bg-stone-200 text-stone-400'}`}>
                   {step > s ? '✓' : s}
                 </div>
                 {['基本設定', 'マスタ取込', 'URL発行'][i]}
@@ -110,7 +110,7 @@ export default function CreatePage() {
                     onClick={() => setType(t)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all
                       ${type === t
-                        ? 'bg-[#E8F0EC] border-[#4A7A5A] text-[#1A3A2A]'
+                        ? 'bg-stone-100 border-stone-900 text-stone-900'
                         : 'bg-white border-stone-300 text-stone-500 hover:border-stone-400'}`}
                   >
                     {t === 'full' ? '一斉棚卸し' : '重点棚卸し'}
@@ -185,7 +185,7 @@ export default function CreatePage() {
               className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
                 ${csvRows.length > 0
                   ? 'border-emerald-400 bg-emerald-50'
-                  : 'border-stone-300 hover:border-[#4A7A5A] hover:bg-[#E8F0EC]/30'}`}
+                  : 'border-stone-300 hover:border-stone-500 hover:bg-stone-50'}`}
             >
               <div className="text-3xl mb-2">{csvRows.length > 0 ? '✅' : '📂'}</div>
               {csvRows.length > 0 ? (

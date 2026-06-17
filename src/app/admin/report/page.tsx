@@ -186,7 +186,7 @@ function ReportContent() {
               href={`/count/${session.token}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[#4A7A5A] underline truncate"
+              className="text-sm text-stone-600 underline truncate"
             >
               {typeof window !== 'undefined' ? `${window.location.origin}/count/${session.token}` : `/count/${session.token}`}
             </a>
@@ -216,7 +216,7 @@ function ReportContent() {
               onClick={() => { setFilter(f); setPage(1); }}
               className={`px-3 py-1.5 text-sm rounded-full border transition-all
                 ${filter === f
-                  ? 'bg-[#E8F0EC] border-[#4A7A5A] text-[#1A3A2A] font-medium'
+                  ? 'bg-stone-100 border-stone-900 text-stone-900 font-medium'
                   : 'bg-white border-stone-300 text-stone-500 hover:border-stone-400'}`}
             >
               {label}
@@ -315,7 +315,7 @@ function ReportContent() {
                     <button
                       key={p}
                       onClick={() => setPage(p as number)}
-                      className={`px-3 py-1.5 text-sm border rounded-lg ${page === p ? 'bg-[#1A3A2A] text-white border-[#1A3A2A]' : 'border-stone-300 hover:bg-stone-50'}`}
+                      className={`px-3 py-1.5 text-sm border rounded-lg ${page === p ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-300 hover:bg-stone-50'}`}
                     >
                       {p}
                     </button>
@@ -347,7 +347,7 @@ function ReportContent() {
               <select
                 value={causeCategory}
                 onChange={e => setCauseCategory(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md outline-none focus:border-[#4A7A5A] bg-white"
+                className="w-full px-3 py-2 text-sm border border-stone-300 rounded-md outline-none focus:border-stone-500 bg-white"
               >
                 <option value="">選択してください</option>
                 {CAUSE_OPTIONS.map(o => <option key={o}>{o}</option>)}

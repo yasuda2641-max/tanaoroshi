@@ -15,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen">
       {/* サイドバー */}
-      <aside className="w-56 bg-[#1A3A2A] min-h-screen flex flex-col flex-shrink-0">
+      <aside className="w-56 bg-stone-900 min-h-screen flex flex-col flex-shrink-0">
         <div className="px-5 py-6 border-b border-white/10">
           <div className="text-white/60 text-xs font-semibold tracking-widest mb-1">丸菱リンクト</div>
           <div className="text-white text-lg font-bold">棚卸しアプリ</div>
@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`flex items-center gap-2.5 px-5 py-2.5 text-sm transition-all border-l-[3px]
                   ${active
-                    ? 'bg-white/10 text-white border-[#7FD4A0]'
+                    ? 'bg-white/10 text-white border-white'
                     : 'text-white/60 border-transparent hover:bg-white/5 hover:text-white/90'
                   }`}
               >
