@@ -238,9 +238,13 @@ export default function CounterApp({ token }: { token: string }) {
   return (
     <div className="min-h-screen bg-[#F7F6F2]">
       {/* ステータスバー風ヘッダー */}
-      <div className="bg-[#1A3A2A] px-4 h-12 flex items-center justify-between sticky top-0 z-10">
-        <span className="text-white/80 text-sm font-medium truncate">{session?.name ?? '棚卸し'}</span>
-        <span className="text-white/60 text-xs">{staffName}</span>
+      <div className={`px-4 h-12 flex items-center justify-between sticky top-0 z-10 transition-colors
+        ${isRecountMode ? 'bg-amber-500' : 'bg-[#1A3A2A]'}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          {isRecountMode && <span className="text-white text-xs font-bold bg-white/20 px-2 py-0.5 rounded shrink-0">リカウント</span>}
+          <span className="text-white/90 text-sm font-medium truncate">{session?.name ?? '棚卸し'}</span>
+        </div>
+        <span className="text-white/70 text-xs shrink-0 ml-2">{staffName}</span>
       </div>
 
       {/* ── 計数入力（フルハイト専用レイアウト） ── */}
@@ -250,9 +254,6 @@ export default function CounterApp({ token }: { token: string }) {
 
           {/* アイテム情報（コンパクト） */}
           <div className="mb-2 shrink-0">
-            {isRecountMode && (
-              <span className="inline-block mb-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">リカウントモード</span>
-            )}
             <p className="text-[11px] text-stone-400 mb-0.5">{currentItem.location} / {currentItem.productCd}</p>
             <p className="text-[15px] font-bold leading-snug text-stone-950">{currentItem.productName}</p>
             {currentItem.expiryDate && (
@@ -289,7 +290,7 @@ export default function CounterApp({ token }: { token: string }) {
                 }}
                 className={`w-full h-full rounded-xl font-medium transition-transform duration-75 active:scale-95
                   ${k === '送信'
-                    ? 'bg-[#1A3A2A] text-white text-base border-0'
+                    ? isRecountMode ? 'bg-amber-500 text-white text-base border-0' : 'bg-[#1A3A2A] text-white text-base border-0'
                     : k === '⌫'
                     ? 'bg-stone-100 text-stone-500 text-base border border-stone-200'
                     : 'bg-white text-stone-950 text-[22px] border border-stone-200'}`}
