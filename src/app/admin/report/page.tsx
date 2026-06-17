@@ -61,6 +61,9 @@ function ReportContent() {
   // 差異あり、または実数量が0のレコードを対象とする（0個は必ず記録）
   const diffRecords = records.filter(r => r.hasDiff || r.actualQty === 0);
   const commentRecords = records.filter(r => r.comment);
+  const recountDone = records.filter(r => r.hasDiff && r.isRecounted).length;
+  const recountTotal = records.filter(r => r.hasDiff).length;
+  const recountPct = recountTotal > 0 ? Math.round((recountDone / recountTotal) * 100) : 0;
 
   const addedRecords = records.filter(r => r.isAdded);
 
@@ -210,11 +213,24 @@ function ReportContent() {
             </div>
             <div className="text-xs text-stone-400 mt-1.5">{session?.status === 'completed' ? '完了' : '進行中'}</div>
           </div>
-          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
-            <div className="text-xs font-medium text-stone-400 mb-1">差異あり</div>
-            <div className={`text-2xl font-bold ${diffRecords.length > 0 ? 'text-red-600' : 'text-stone-900'}`}>{diffRecords.length}</div>
-            <div className="text-xs text-stone-400 mt-0.5">
-              超過 {diffRecords.filter(r => r.diff > 0).length}件 ／ 不足 {diffRecords.filter(r => r.diff < 0).length}件
+          <div className="flex flex-col gap-4">
+            <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex-1">
+              <div className="text-xs font-medium text-stone-400 mb-1">差異あり</div>
+              <div className={`text-2xl font-bold ${diffRecords.length > 0 ? 'text-red-600' : 'text-stone-900'}`}>{diffRecords.length}</div>
+              <div className="text-xs text-stone-400 mt-0.5">
+                超過 {diffRecords.filter(r => r.diff > 0).length}件 ／ 不足 {diffRecords.filter(r => r.diff < 0).length}件
+              </div>
+            </div>
+            <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex-1">
+              <div className="text-xs font-medium text-stone-400 mb-1">リカウント</div>
+              <div className="flex items-end gap-2">
+                <span className="text-2xl font-bold text-stone-900">{recountDone}</span>
+                <span className="text-sm text-stone-400 mb-0.5">/ {recountTotal}件</span>
+                <span className="text-2xl font-bold text-stone-900 ml-auto">{recountPct}%</span>
+              </div>
+              <div className="mt-2 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${recountPct}%` }} />
+              </div>
             </div>
           </div>
         </div>
