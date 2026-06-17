@@ -237,14 +237,13 @@ function ReportContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','差異率','出荷期限日','担当者','リカウント','原因コメント',''].map(h => (
+                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','出荷期限日','担当者','リカウント','原因コメント',''].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {paged.map(r => {
-                    const rate = r.systemQty > 0 ? ((r.diff / r.systemQty) * 100).toFixed(1) : '-';
                     return (
                       <tr key={r.id} className={`border-b border-stone-100 hover:bg-stone-50 ${r.recountOk ? 'bg-emerald-50/50' : ''}`}>
                         <td className="px-3 py-3 font-mono text-xs text-stone-600">{r.location}</td>
@@ -260,7 +259,6 @@ function ReportContent() {
                         <td className="px-3 py-3 text-right text-stone-600">{r.systemQty}</td>
                         <td className="px-3 py-3 text-right font-semibold text-stone-900">{r.actualQty}</td>
                         <td className="px-3 py-3 text-center"><DiffValue diff={r.diff} /></td>
-                        <td className="px-3 py-3 text-center text-xs text-stone-500">{rate !== '-' ? `${rate}%` : '-'}</td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.masterExpiryDate ?? '-'}</td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.staffName}</td>
                         <td className="px-3 py-3 text-center">
