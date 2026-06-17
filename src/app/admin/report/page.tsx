@@ -197,10 +197,15 @@ function ReportContent() {
         )}
 
         {/* サマリー */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <StatCard label="完了アイテム" value={completedCount} sub={`全${session?.totalItems ?? 0}件中 ${pct}%`} />
-          <StatCard label="差異あり件数" value={diffRecords.length} accent={diffRecords.length > 0 ? 'text-red-600' : undefined} sub="完了済みから" />
-          <StatCard label="コメントあり" value={commentRecords.length} sub="計数済みから" />
+          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+            <div className="text-xs font-medium text-stone-400 mb-1">差異あり</div>
+            <div className={`text-2xl font-bold ${diffRecords.length > 0 ? 'text-red-600' : 'text-stone-900'}`}>{diffRecords.length}</div>
+            <div className="text-xs text-stone-400 mt-0.5">
+              超過 {diffRecords.filter(r => r.diff > 0).length}件 ／ 不足 {diffRecords.filter(r => r.diff < 0).length}件
+            </div>
+          </div>
           <StatCard label="進捗" value={`${pct}%`} sub={session?.status === 'completed' ? '完了' : '進行中'} />
         </div>
 
