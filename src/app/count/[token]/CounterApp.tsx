@@ -128,7 +128,6 @@ export default function CounterApp({ token }: { token: string }) {
   async function selectShelf(s: ShelfProgress) {
     setShelf(s.shelf);
     setShelfKey(s.locationKey);
-    setIsRecountMode(false); // 棚を切り替えたら計数モードにリセット
     await loadShelfItems(s.locationKey);
     // 計数済みアイテムを取得してMapに
     const recs = await getCountRecords(session!.id);
@@ -230,7 +229,7 @@ export default function CounterApp({ token }: { token: string }) {
         ${isRecountMode ? 'bg-amber-500' : 'bg-[#1A3A2A]'}`}>
         <span className="text-white/90 text-sm font-medium truncate flex-1 min-w-0">{session?.name ?? '棚卸し'}</span>
         <div className="flex items-center gap-2 shrink-0 ml-2">
-          {(screen === 'item-list' || screen === 'count-input' || screen === 'count-result') && (
+          {!['loading','error','staff-input','shelf-complete','add-product'].includes(screen) && (
             <div className="flex items-center bg-white/20 rounded-full p-0.5 text-[11px] font-semibold">
               <button
                 onClick={() => setIsRecountMode(false)}
