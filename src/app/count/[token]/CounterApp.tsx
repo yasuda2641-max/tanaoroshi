@@ -225,10 +225,10 @@ export default function CounterApp({ token }: { token: string }) {
   // ── レンダリング ──────────────────────────────
   const dm = isRecountMode;
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dm ? 'bg-zinc-950' : 'bg-[#F7F6F2]'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${dm ? 'bg-zinc-950' : 'bg-white'}`}>
       {/* ステータスバー風ヘッダー */}
       <div className={`px-4 h-12 flex items-center justify-between sticky top-0 z-10 transition-colors duration-300
-        ${dm ? 'bg-zinc-900 border-b border-zinc-800' : 'bg-[#1A3A2A]'}`}>
+        ${dm ? 'bg-zinc-900 border-b border-zinc-800' : 'bg-stone-900'}`}>
         <span className="text-white/90 text-sm font-medium truncate flex-1 min-w-0">{session?.name ?? '棚卸し'}</span>
         <div className="flex items-center gap-2 shrink-0 ml-2">
           {!['loading','error','staff-input','shelf-complete','add-product'].includes(screen) && (
@@ -236,7 +236,7 @@ export default function CounterApp({ token }: { token: string }) {
               ${dm ? 'bg-white/10' : 'bg-white/20'}`}>
               <button
                 onClick={() => setIsRecountMode(false)}
-                className={`px-2.5 py-0.5 rounded-full transition-colors ${!dm ? 'bg-white text-[#1A3A2A]' : 'text-white/60 hover:text-white/90'}`}
+                className={`px-2.5 py-0.5 rounded-full transition-colors ${!dm ? 'bg-white text-stone-900' : 'text-white/60 hover:text-white/90'}`}
               >
                 計数
               </button>
@@ -268,7 +268,7 @@ export default function CounterApp({ token }: { token: string }) {
               href={`https://orderie.jp/component/g/g${currentItem.productCd}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`text-[11px] underline ${dm ? 'text-amber-400' : 'text-[#4A7A5A]'}`}
+              className={`text-[11px] underline ${dm ? 'text-amber-400' : 'text-stone-500'}`}
             >
               orderie で確認
             </a>
@@ -299,7 +299,7 @@ export default function CounterApp({ token }: { token: string }) {
                 }}
                 className={`w-full h-full rounded-xl font-medium transition-transform duration-75 active:scale-95
                   ${k === '送信'
-                    ? 'bg-amber-500 text-white text-base border-0'
+                    ? dm ? 'bg-amber-500 text-white text-base border-0' : 'bg-stone-900 text-white text-base border-0'
                     : k === '⌫'
                     ? dm ? 'bg-zinc-800 text-zinc-400 text-base border border-zinc-700' : 'bg-stone-100 text-stone-500 text-base border border-stone-200'
                     : dm ? 'bg-zinc-900 text-zinc-100 text-[22px] border border-zinc-800' : 'bg-white text-stone-950 text-[22px] border border-stone-200'}`}
@@ -396,7 +396,7 @@ export default function CounterApp({ token }: { token: string }) {
                     setScreen('count-input');
                   }}
                   className={`w-full py-4 font-bold text-base rounded-xl active:scale-[0.98] transition-transform border-2
-                    ${dm ? 'bg-transparent border-zinc-700 text-zinc-300' : 'bg-white border-[#1A3A2A] text-[#1A3A2A]'}`}
+                    ${dm ? 'bg-transparent border-zinc-700 text-zinc-300' : 'bg-white border-stone-900 text-stone-900'}`}
                 >
                   もう一度計数する
                 </button>
@@ -404,7 +404,7 @@ export default function CounterApp({ token }: { token: string }) {
               <button
                 onClick={() => setScreen(allDone ? 'shelf-complete' : 'item-list')}
                 className={`w-full py-4 font-bold text-base rounded-xl active:scale-[0.98] transition-transform
-                  ${dm ? 'bg-amber-500 text-white' : 'bg-[#1A3A2A] text-white'}`}
+                  ${dm ? 'bg-amber-500 text-white' : 'bg-stone-900 text-white'}`}
               >
                 {allDone ? '棚完了 →' : '一覧に戻る'}
               </button>
@@ -435,7 +435,7 @@ export default function CounterApp({ token }: { token: string }) {
             <div className="text-left space-y-3">
               <label className="block text-xs font-medium text-stone-500">担当者名</label>
               <input
-                className="w-full px-4 py-3 text-base border border-stone-300 rounded-xl outline-none focus:border-[#4A7A5A] bg-white"
+                className="w-full px-4 py-3 text-base border border-stone-300 rounded-xl outline-none focus:border-stone-500 bg-white"
                 placeholder="例：田中 一郎"
                 value={staffName}
                 onChange={e => setStaffName(e.target.value)}
@@ -444,7 +444,7 @@ export default function CounterApp({ token }: { token: string }) {
               {error && <p className="text-xs text-red-500">{error}</p>}
               <button
                 onClick={startCount}
-                className="w-full py-3 bg-[#1A3A2A] text-white font-semibold rounded-xl text-base active:scale-[0.98] transition-all"
+                className="w-full py-3 bg-stone-900 text-white font-semibold rounded-xl text-base active:scale-[0.98] transition-all"
               >
                 開始する →
               </button>
@@ -729,7 +729,7 @@ export default function CounterApp({ token }: { token: string }) {
                   }
                 }}
                 className={`block w-full py-4 font-bold text-base rounded-xl disabled:opacity-50 active:scale-[0.98] transition-transform
-                  ${dm ? 'bg-amber-500 text-white' : 'bg-[#1A3A2A] text-white'}`}
+                  ${dm ? 'bg-amber-500 text-white' : 'bg-stone-900 text-white'}`}
               >
                 {adding ? '追加中...' : '追加する'}
               </button>
@@ -817,7 +817,7 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, isPending,
           <span className={`font-medium text-sm ${isCompleted || isPending ? 'text-white' : dark ? 'text-zinc-100' : 'text-stone-900'}`}>{label}</span>
           {!isCompleted && progress !== undefined && progress > 0 && (
             <div className={`h-1 rounded-full mt-1.5 w-24 ${dark ? 'bg-zinc-800' : 'bg-stone-100'}`}>
-              <div className={`h-full rounded-full ${dark ? 'bg-zinc-500' : 'bg-[#4A7A5A]'}`} style={{ width: `${Math.min(100, progress * 100)}%` }} />
+              <div className={`h-full rounded-full ${dark ? 'bg-zinc-500' : 'bg-stone-500'}`} style={{ width: `${Math.min(100, progress * 100)}%` }} />
             </div>
           )}
         </div>
