@@ -221,10 +221,10 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }
 
-  const shelfItems    = items.sort((a, b) => a.location.localeCompare(b.location));
-  const doneCount     = shelfItems.filter(i => counted.has(i.id)).length;
-  const allDone       = shelfItems.length > 0 && doneCount === shelfItems.length && diffUnresolved === 0;
+  const shelfItems     = items.sort((a, b) => a.location.localeCompare(b.location));
+  const doneCount      = shelfItems.filter(i => counted.has(i.id)).length;
   const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
+  const allDone        = shelfItems.length > 0 && doneCount === shelfItems.length && diffUnresolved === 0;
 
   // ── レンダリング ──────────────────────────────
   return (
