@@ -225,10 +225,10 @@ export default function CounterApp({ token }: { token: string }) {
   // ── レンダリング ──────────────────────────────
   const dm = isRecountMode;
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dm ? 'bg-zinc-950' : 'bg-white'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${dm ? 'bg-zinc-900' : 'bg-white'}`}>
       {/* ステータスバー風ヘッダー */}
       <div className={`px-4 h-12 flex items-center justify-between sticky top-0 z-10 transition-colors duration-300
-        ${dm ? 'bg-zinc-900 border-b border-zinc-800' : 'bg-stone-900'}`}>
+        ${dm ? 'bg-zinc-950 border-b border-zinc-700' : 'bg-stone-900'}`}>
         <span className="text-white/90 text-sm font-medium truncate flex-1 min-w-0">{session?.name ?? '棚卸し'}</span>
         <div className="flex items-center gap-2 shrink-0 ml-2">
           {!['loading','error','staff-input','shelf-complete','add-product'].includes(screen) && (
@@ -259,7 +259,7 @@ export default function CounterApp({ token }: { token: string }) {
 
           {/* アイテム情報（コンパクト） */}
           <div className="mb-2 shrink-0">
-            <p className={`text-[11px] mb-0.5 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>{currentItem.location} / {currentItem.productCd}</p>
+            <p className={`text-[11px] mb-0.5 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>{currentItem.location} / {currentItem.productCd}</p>
             <p className={`text-[15px] font-bold leading-snug ${dm ? 'text-zinc-100' : 'text-stone-950'}`}>{currentItem.productName}</p>
             {currentItem.expiryDate && (
               <p className="text-xs text-amber-500 mt-0.5">出荷期限日: {currentItem.expiryDate}</p>
@@ -278,12 +278,12 @@ export default function CounterApp({ token }: { token: string }) {
           <div className={`rounded-xl text-center p-2.5 mb-2 shrink-0 transition-colors duration-150
             ${qtyLimitHit
               ? dm ? 'bg-red-950/60' : 'bg-red-100'
-              : dm ? 'bg-zinc-900' : 'bg-stone-100'}`}>
-            <p className={`text-[11px] mb-0.5 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>
+              : dm ? 'bg-zinc-800' : 'bg-stone-100'}`}>
+            <p className={`text-[11px] mb-0.5 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>
               実数量{qtyLimitHit && <span className="text-red-400 ml-1">（上限6桁）</span>}
             </p>
             <p className={`text-5xl font-bold tracking-[4px] leading-none ${dm ? 'text-zinc-100' : 'text-stone-950'}`}>
-              {countState.qty || <span className={dm ? 'text-zinc-700' : 'text-stone-300'}>-</span>}
+              {countState.qty || <span className={dm ? 'text-zinc-600' : 'text-stone-300'}>-</span>}
             </p>
           </div>
 
@@ -301,8 +301,8 @@ export default function CounterApp({ token }: { token: string }) {
                   ${k === '送信'
                     ? dm ? 'bg-amber-500 text-white text-base border-0' : 'bg-stone-900 text-white text-base border-0'
                     : k === '⌫'
-                    ? dm ? 'bg-zinc-800 text-zinc-400 text-base border border-zinc-700' : 'bg-stone-100 text-stone-500 text-base border border-stone-200'
-                    : dm ? 'bg-zinc-900 text-zinc-100 text-[22px] border border-zinc-800' : 'bg-white text-stone-950 text-[22px] border border-stone-200'}`}
+                    ? dm ? 'bg-zinc-700 text-zinc-300 text-base border border-zinc-700' : 'bg-stone-100 text-stone-500 text-base border border-stone-200'
+                    : dm ? 'bg-zinc-800 text-zinc-100 text-[22px] border border-zinc-700' : 'bg-white text-stone-950 text-[22px] border border-stone-200'}`}
               >
                 {k}
               </button>
@@ -314,7 +314,7 @@ export default function CounterApp({ token }: { token: string }) {
             <button
               onClick={() => setCountState(prev => ({ ...prev, expiryOpen: !prev.expiryOpen }))}
               className={`w-full text-left px-3 py-2 text-[13px] rounded-[10px] flex justify-between
-                ${dm ? 'bg-zinc-900 text-zinc-500' : 'bg-stone-100 text-stone-500'}`}
+                ${dm ? 'bg-zinc-800 text-zinc-400' : 'bg-stone-100 text-stone-500'}`}
             >
               <span>賞味期限 / コメント（任意）</span>
               <span>{countState.expiryOpen ? '▲' : '▼'}</span>
@@ -326,7 +326,7 @@ export default function CounterApp({ token }: { token: string }) {
                   value={countState.expiry}
                   onChange={e => setCountState(prev => ({ ...prev, expiry: e.target.value }))}
                   className={`w-full px-3 py-2 text-sm rounded-[10px] outline-none
-                    ${dm ? 'bg-zinc-900 border border-zinc-700 text-zinc-100' : 'border border-stone-300'}`}
+                    ${dm ? 'bg-zinc-800 border border-zinc-700 text-zinc-100' : 'border border-stone-300'}`}
                 />
                 <textarea
                   value={countState.comment}
@@ -334,7 +334,7 @@ export default function CounterApp({ token }: { token: string }) {
                   placeholder="コメント（任意）"
                   rows={2}
                   className={`w-full px-3 py-2 text-sm rounded-[10px] outline-none resize-none
-                    ${dm ? 'bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder-zinc-600' : 'border border-stone-300'}`}
+                    ${dm ? 'bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-500' : 'border border-stone-300'}`}
                 />
               </div>
             )}
@@ -353,22 +353,22 @@ export default function CounterApp({ token }: { token: string }) {
               <div className="text-4xl mb-2">
                 {countResult.diff === 0 ? '✅' : countResult.diff > 0 ? '📈' : '📉'}
               </div>
-              <p className={`text-sm font-medium ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>計数完了</p>
+              <p className={`text-sm font-medium ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>計数完了</p>
               <p className={`text-base font-bold mt-1 leading-snug ${dm ? 'text-zinc-100' : 'text-stone-900'}`}>{countResult.productName}</p>
             </div>
 
-            <div className={`rounded-2xl overflow-hidden mb-5 border ${dm ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-stone-200'}`}>
-              <div className={`grid grid-cols-3 divide-x ${dm ? 'divide-zinc-800' : 'divide-stone-100'}`}>
+            <div className={`rounded-2xl overflow-hidden mb-5 border ${dm ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-stone-200'}`}>
+              <div className={`grid grid-cols-3 divide-x ${dm ? 'divide-zinc-700' : 'divide-stone-100'}`}>
                 <div className="text-center py-5 px-3">
-                  <p className={`text-[11px] mb-1 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>理論値</p>
+                  <p className={`text-[11px] mb-1 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>理論値</p>
                   <p className={`text-2xl font-bold ${dm ? 'text-zinc-400' : 'text-stone-700'}`}>{countResult.systemQty}</p>
                 </div>
                 <div className="text-center py-5 px-3">
-                  <p className={`text-[11px] mb-1 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>実数量</p>
+                  <p className={`text-[11px] mb-1 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>実数量</p>
                   <p className={`text-2xl font-bold ${dm ? 'text-zinc-100' : 'text-stone-900'}`}>{countResult.actualQty}</p>
                 </div>
                 <div className="text-center py-5 px-3">
-                  <p className={`text-[11px] mb-1 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>差異</p>
+                  <p className={`text-[11px] mb-1 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>差異</p>
                   <p className={`text-2xl font-bold
                     ${countResult.diff === 0 ? 'text-emerald-500'
                     : countResult.diff > 0 ? 'text-red-400'
@@ -529,7 +529,7 @@ export default function CounterApp({ token }: { token: string }) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h1 className={`text-lg font-bold ${dm ? 'text-zinc-100' : ''}`}>{shelfKey} 棚</h1>
-                <p className={`text-sm ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>
+                <p className={`text-sm ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>
                   {isRecountMode
                     ? <span className="text-amber-400 font-medium">リカウント対象 {shelfItems.length}件</span>
                     : <>{doneCount}/{allShelfItems.length}件完了{diffUnresolved > 0 && <span className="ml-2 text-amber-600 font-medium">差異{diffUnresolved}件</span>}</>
@@ -540,7 +540,7 @@ export default function CounterApp({ token }: { token: string }) {
                 <button
                   onClick={() => { setAddForm({ dan: '', retsu: '', productCd: '', productName: '', qty: '', expiryDate: '' }); setAddError(''); setScreen('add-product'); }}
                   className={`px-3 py-1.5 text-sm font-medium rounded-lg border
-                    ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-stone-300 text-stone-700'}`}
+                    ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-stone-300 text-stone-700'}`}
                 >
                   ＋ 商品追加
                 </button>
@@ -565,7 +565,7 @@ export default function CounterApp({ token }: { token: string }) {
                         ? dm ? 'bg-sky-950/40 border-sky-900/60 active:bg-sky-950/60' : 'bg-blue-50 border-blue-200 active:bg-blue-100'
                         : done
                         ? dm ? 'bg-emerald-950/40 border-emerald-900/60 active:bg-emerald-950/60' : 'bg-emerald-50 border-emerald-200 active:bg-emerald-100'
-                        : dm ? 'bg-zinc-900 border-zinc-800 active:bg-zinc-800' : 'bg-white border-stone-200 active:bg-stone-50'}`}
+                        : dm ? 'bg-zinc-800 border-zinc-700 active:bg-zinc-700' : 'bg-white border-stone-200 active:bg-stone-50'}`}
                   >
                     <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0
                       ${!done             ? dm ? 'bg-zinc-600' : 'bg-stone-300'
@@ -575,7 +575,7 @@ export default function CounterApp({ token }: { token: string }) {
                     />
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-medium truncate ${dm ? 'text-zinc-100' : ''}`}>{item.productName}</p>
-                      <p className={`text-xs ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>{item.location} ／ {item.productCd}</p>
+                      <p className={`text-xs ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>{item.location} ／ {item.productCd}</p>
                       {item.expiryDate && <p className="text-xs text-amber-500">期限: {item.expiryDate}</p>}
                       {unrecounted && (
                         <p className={`text-xs font-medium mt-0.5 ${dm ? 'text-amber-400' : 'text-amber-700'}`}>
@@ -593,7 +593,7 @@ export default function CounterApp({ token }: { token: string }) {
                     </div>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0
                       ${!done
-                        ? dm ? 'bg-zinc-800 text-zinc-400' : 'bg-stone-100 text-stone-500'
+                        ? dm ? 'bg-zinc-700 text-zinc-300' : 'bg-stone-100 text-stone-500'
                         : unrecounted
                         ? dm ? 'bg-amber-900/60 text-amber-300' : 'bg-amber-100 text-amber-700'
                         : recountedWithDiff
@@ -616,11 +616,11 @@ export default function CounterApp({ token }: { token: string }) {
             <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} dark={dm} />
             <div className="mb-5">
               <h1 className={`text-lg font-bold ${dm ? 'text-zinc-100' : ''}`}>商品を追加</h1>
-              <p className={`text-sm mt-0.5 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>{shelfKey} 棚 ／ 想定外の商品を登録</p>
+              <p className={`text-sm mt-0.5 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>{shelfKey} 棚 ／ 想定外の商品を登録</p>
             </div>
             <div className="space-y-4">
               <div>
-                <label className={`block text-xs mb-2 ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>ロケーション ※</label>
+                <label className={`block text-xs mb-2 ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>ロケーション ※</label>
                 <div className="flex items-center gap-1.5">
                   <div className={`px-3.5 py-3 text-base font-semibold border-2 rounded-xl whitespace-nowrap
                     ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-stone-100 border-stone-200 text-stone-600'}`}>
@@ -633,7 +633,7 @@ export default function CounterApp({ token }: { token: string }) {
                     placeholder="段"
                     inputMode="numeric"
                     className={`w-16 py-3 px-2 text-base border-2 rounded-xl outline-none text-center
-                      ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-600' : 'border-stone-300'}`}
+                      ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500' : 'border-stone-300'}`}
                   />
                   <span className={`text-lg font-bold ${dm ? 'text-zinc-600' : 'text-stone-400'}`}>-</span>
                   <input
@@ -642,42 +642,42 @@ export default function CounterApp({ token }: { token: string }) {
                     placeholder="列"
                     inputMode="numeric"
                     className={`w-16 py-3 px-2 text-base border-2 rounded-xl outline-none text-center
-                      ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-600' : 'border-stone-300'}`}
+                      ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500' : 'border-stone-300'}`}
                   />
                 </div>
               </div>
               <div>
-                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>商品CD / 識別CD</label>
+                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>商品CD / 識別CD</label>
                 <input
                   value={addForm.productCd}
                   onChange={e => setAddForm(p => ({...p, productCd: e.target.value}))}
                   placeholder="例: 00127"
                   className={`block w-full p-3 text-base border-2 rounded-xl outline-none
-                    ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-600' : 'border-stone-300'}`}
+                    ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500' : 'border-stone-300'}`}
                 />
               </div>
               <div>
-                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>商品名</label>
+                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>商品名</label>
                 <input
                   value={addForm.productName}
                   onChange={e => setAddForm(p => ({...p, productName: e.target.value}))}
                   placeholder="例: 金太洋 栗甘露煮"
                   className={`block w-full p-3 text-base border-2 rounded-xl outline-none
-                    ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-600' : 'border-stone-300'}`}
+                    ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500' : 'border-stone-300'}`}
                 />
               </div>
               <div>
-                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>出荷期限日</label>
+                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>出荷期限日</label>
                 <input
                   type="date"
                   value={addForm.expiryDate}
                   onChange={e => setAddForm(p => ({...p, expiryDate: e.target.value}))}
                   className={`block w-full p-3 text-base border-2 rounded-xl outline-none
-                    ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'border-stone-300'}`}
+                    ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'border-stone-300'}`}
                 />
               </div>
               <div>
-                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>数量</label>
+                <label className={`block text-xs mb-1 ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>数量</label>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -685,7 +685,7 @@ export default function CounterApp({ token }: { token: string }) {
                   onChange={e => setAddForm(p => ({...p, qty: e.target.value}))}
                   placeholder="0"
                   className={`block w-full p-3 text-2xl font-bold border-2 rounded-xl outline-none text-center
-                    ${dm ? 'bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-600' : 'border-stone-300'}`}
+                    ${dm ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500' : 'border-stone-300'}`}
                 />
               </div>
               {addError && <p className="text-xs text-red-400">{addError}</p>}
@@ -742,9 +742,9 @@ export default function CounterApp({ token }: { token: string }) {
           <div className="text-center pt-12">
             <div className="text-6xl mb-4">🎉</div>
             <h1 className={`text-xl font-bold mb-2 ${dm ? 'text-zinc-100' : ''}`}>棚の計数完了！</h1>
-            <p className={`text-sm mb-8 ${dm ? 'text-zinc-500' : 'text-stone-500'}`}>{shelfKey} の計数が完了しました。</p>
-            <div className={`text-left border rounded-xl p-4 mb-6 ${dm ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-stone-200'}`}>
-              <p className={`text-xs mb-3 ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>次の担当候補</p>
+            <p className={`text-sm mb-8 ${dm ? 'text-zinc-400' : 'text-stone-500'}`}>{shelfKey} の計数が完了しました。</p>
+            <div className={`text-left border rounded-xl p-4 mb-6 ${dm ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-stone-200'}`}>
+              <p className={`text-xs mb-3 ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>次の担当候補</p>
               {shelfList
                 .filter(s => !s.isCompleted && s.locationKey !== shelfKey)
                 .slice(0, 2)
@@ -753,10 +753,10 @@ export default function CounterApp({ token }: { token: string }) {
                     key={s.locationKey}
                     onClick={() => selectShelf(s)}
                     className={`flex items-center justify-between py-3 border-b last:border-0 cursor-pointer
-                      ${dm ? 'border-zinc-800' : 'border-stone-100'}`}
+                      ${dm ? 'border-zinc-700' : 'border-stone-100'}`}
                   >
                     <span className={`font-medium text-sm ${dm ? 'text-zinc-100' : ''}`}>{s.locationKey} 棚</span>
-                    <span className={`text-xs ${dm ? 'text-zinc-500' : 'text-stone-400'}`}>{s.totalItems}件</span>
+                    <span className={`text-xs ${dm ? 'text-zinc-400' : 'text-stone-400'}`}>{s.totalItems}件</span>
                   </div>
                 ))}
             </div>
@@ -781,7 +781,7 @@ function DrillHeader({ title, sub, dark }: { title: string; sub: string; dark?: 
   return (
     <div className="mb-4">
       <h1 className={`text-xl font-bold ${dark ? 'text-zinc-100' : 'text-stone-900'}`}>{title}</h1>
-      <p className={`text-sm mt-0.5 ${dark ? 'text-zinc-500' : 'text-stone-400'}`}>{sub}</p>
+      <p className={`text-sm mt-0.5 ${dark ? 'text-zinc-400' : 'text-stone-400'}`}>{sub}</p>
     </div>
   );
 }
@@ -789,7 +789,7 @@ function DrillHeader({ title, sub, dark }: { title: string; sub: string; dark?: 
 function BackButton({ label, onClick, dark }: { label: string; onClick: () => void; dark?: boolean }) {
   return (
     <button onClick={onClick} className={`flex items-center gap-1 text-sm mb-4 transition-colors
-      ${dark ? 'text-zinc-500 hover:text-zinc-300' : 'text-stone-400 hover:text-stone-600'}`}>
+      ${dark ? 'text-zinc-400 hover:text-zinc-300' : 'text-stone-400 hover:text-stone-600'}`}>
       ← {label}
     </button>
   );
@@ -807,7 +807,7 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, isPending,
           : isPending
           ? 'bg-amber-400 border border-amber-400 active:bg-amber-500'
           : dark
-          ? 'bg-zinc-900 border border-zinc-800 active:bg-zinc-800'
+          ? 'bg-zinc-800 border border-zinc-700 active:bg-zinc-700'
           : 'bg-white border border-stone-200 active:bg-stone-50'}`}
     >
       <div className="flex items-center gap-2.5 flex-1">
@@ -816,14 +816,14 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, isPending,
         <div>
           <span className={`font-medium text-sm ${isCompleted || isPending ? 'text-white' : dark ? 'text-zinc-100' : 'text-stone-900'}`}>{label}</span>
           {!isCompleted && progress !== undefined && progress > 0 && (
-            <div className={`h-1 rounded-full mt-1.5 w-24 ${dark ? 'bg-zinc-800' : 'bg-stone-100'}`}>
-              <div className={`h-full rounded-full ${dark ? 'bg-zinc-500' : 'bg-stone-500'}`} style={{ width: `${Math.min(100, progress * 100)}%` }} />
+            <div className={`h-1 rounded-full mt-1.5 w-24 ${dark ? 'bg-zinc-700' : 'bg-stone-100'}`}>
+              <div className={`h-full rounded-full ${dark ? 'bg-zinc-400' : 'bg-stone-500'}`} style={{ width: `${Math.min(100, progress * 100)}%` }} />
             </div>
           )}
         </div>
       </div>
       <span className={`text-xs font-medium px-2 py-0.5 rounded
-        ${isCompleted || isPending ? 'bg-white/20 text-white' : dark ? `bg-zinc-800 text-zinc-400 ${badgeColor ?? ''}` : `bg-stone-100 text-stone-500 ${badgeColor ?? ''}`}`}>
+        ${isCompleted || isPending ? 'bg-white/20 text-white' : dark ? `bg-zinc-700 text-zinc-300 ${badgeColor ?? ''}` : `bg-stone-100 text-stone-500 ${badgeColor ?? ''}`}`}>
         {badge}
       </span>
     </div>
