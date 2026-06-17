@@ -534,13 +534,13 @@ export default function CounterApp({ token }: { token: string }) {
             <DrillHeader title="棚を選択" sub={`${building}棟 ${aisle}通路`} />
             <div className="space-y-2">
               {shelfList.map(s => {
-                const isPending       = s.pendingRecountCount > 0;
+                const isPending       = s.pendingRecountCount > 0 && s.completedItems === s.totalItems;
                 const trulyCompleted  = s.isCompleted && s.pendingRecountCount === 0;
                 return (
                   <DrillItem
                     key={s.locationKey}
                     label={`${s.shelf}棚`}
-                    badge={trulyCompleted ? '完了' : isPending ? 'リカウント待ち' : `${s.completedItems}/${s.totalItems}件`}
+                    badge={trulyCompleted ? '完了' : isPending ? `リカウント ${s.pendingRecountCount}件` : `${s.completedItems}/${s.totalItems}件`}
                     progress={s.completedItems / s.totalItems}
                     isCompleted={trulyCompleted}
                     isPending={isPending}
@@ -818,7 +818,7 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, isPending,
         {isPending && <span className="text-white text-base font-bold">!</span>}
         <div>
           <span className={`font-medium text-sm ${isCompleted || isPending ? 'text-white' : 'text-stone-900'}`}>{label}</span>
-          {!isCompleted && !isPending && progress !== undefined && progress > 0 && (
+          {!isCompleted && progress !== undefined && progress > 0 && (
             <div className="h-1 bg-stone-100 rounded-full mt-1.5 w-24">
               <div className="h-full bg-[#4A7A5A] rounded-full" style={{ width: `${Math.min(100, progress * 100)}%` }} />
             </div>
