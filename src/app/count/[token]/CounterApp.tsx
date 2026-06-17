@@ -206,10 +206,13 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }
 
-  const shelfItems     = items.sort((a, b) => a.location.localeCompare(b.location));
-  const doneCount      = shelfItems.filter(i => counted.has(i.id)).length;
+  const allShelfItems  = items.sort((a, b) => a.location.localeCompare(b.location));
+  const shelfItems     = isRecountMode
+    ? allShelfItems.filter(i => { const c = counted.get(i.id); return c && c.diff !== 0 && !c.isRecounted && !c.isAdded; })
+    : allShelfItems;
+  const doneCount      = allShelfItems.filter(i => counted.has(i.id)).length;
   const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
-  const allDone        = shelfItems.length > 0 && doneCount === shelfItems.length && diffUnresolved === 0;
+  const allDone        = allShelfItems.length > 0 && doneCount === allShelfItems.length && diffUnresolved === 0;
 
   // allDone になったら自動的に棚を完了にする（宣言後に配置してTDZを回避）
   useEffect(() => {
@@ -508,10 +511,10 @@ export default function CounterApp({ token }: { token: string }) {
               <div>
                 <h1 className="text-lg font-bold">{shelfKey} 棚</h1>
                 <p className="text-sm text-stone-400">
-                  {doneCount}/{shelfItems.length}件完了
-                  {diffUnresolved > 0 && (
-                    <span className="ml-2 text-amber-600 font-medium">差異{diffUnresolved}件 要リカウント</span>
-                  )}
+                  {isRecountMode
+                    ? <span className="text-amber-600 font-medium">リカウント対象 {shelfItems.length}件</span>
+                    : <>{doneCount}/{allShelfItems.length}件完了{diffUnresolved > 0 && <span className="ml-2 text-amber-600 font-medium">差異{diffUnresolved}件</span>}</>
+                  }
                 </p>
               </div>
               <div className="flex gap-2">
