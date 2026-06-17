@@ -11,9 +11,24 @@ type Screen =
   | 'select-aisle'
   | 'select-shelf'
   | 'item-list'
+  | 'recount-confirm'
   | 'count-input'
+  | 'count-result'
   | 'shelf-complete'
   | 'add-product';
+
+interface CountResult {
+  productName: string;
+  systemQty: number;
+  actualQty: number;
+  diff: number;
+}
+
+interface CountedInfo {
+  diff: number;
+  isRecounted: boolean;
+  isAdded: boolean;
+}
 
 interface CountState {
   scanned: boolean;
@@ -34,7 +49,7 @@ export default function CounterApp({ token }: { token: string }) {
   const [staffName, setStaffName] = useState('');
   const [shelves, setShelves]     = useState<ShelfProgress[]>([]);
   const [items, setItems]         = useState<MasterItem[]>([]);
-  const [counted, setCounted]     = useState<Set<string>>(new Set()); // location::cd
+  const [counted, setCounted]     = useState<Map<string, CountedInfo>>(new Map());
 
   // drill-down state
   const [building, setBuilding] = useState('');
@@ -48,6 +63,8 @@ export default function CounterApp({ token }: { token: string }) {
   const [submitting, setSubmitting]   = useState(false);
   const [error, setError]             = useState('');
   const [qtyLimitHit, setQtyLimitHit] = useState(false);
+  const [countResult, setCountResult] = useState<CountResult | null>(null);
+  const [isRecountMode, setIsRecountMode] = useState(false);
 
   // 商品追加フォーム
   const [addForm, setAddForm] = useState({ dan: '', retsu: '', productCd: '', productName: '', qty: '', expiryDate: '' });
@@ -113,10 +130,18 @@ export default function CounterApp({ token }: { token: string }) {
     setShelf(s.shelf);
     setShelfKey(s.locationKey);
     await loadShelfItems(s.locationKey);
-    // 計数済みアイテムを取得してSetに
+    // 計数済みアイテムを取得してMapに
     const recs = await getCountRecords(session!.id);
-    const set = new Set(recs.filter(r => r.location.startsWith(s.locationKey)).map(r => r.masterItemId));
-    setCounted(set);
+    const map = new Map(
+      recs
+        .filter(r => r.location.startsWith(s.locationKey))
+        .map(r => [r.masterItemId, {
+          diff: r.diff,
+          isRecounted: r.isRecounted ?? false,
+          isAdded: r.isAdded ?? false,
+        }])
+    );
+    setCounted(map);
     setScreen('item-list');
   }
 
@@ -124,7 +149,21 @@ export default function CounterApp({ token }: { token: string }) {
     setCurrentItem(item);
     setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
     setError('');
-    setScreen('count-input');
+    const info = counted.get(item.id);
+    if (info && info.diff !== 0 && !info.isAdded) {
+      // 差異あり → リカウント確認画面へ
+      setCountResult({
+        productName: item.productName,
+        systemQty: item.systemQty,
+        actualQty: item.systemQty + info.diff,
+        diff: info.diff,
+      });
+      setIsRecountMode(false);
+      setScreen('recount-confirm');
+    } else {
+      setIsRecountMode(false);
+      setScreen('count-input');
+    }
   }
 
   function keyPress(k: string) {
@@ -142,9 +181,11 @@ export default function CounterApp({ token }: { token: string }) {
   async function submitItem() {
     if (!countState.qty) { setError('数量を入力してください'); return; }
     if (!currentItem || !session) return;
+    const isRecounting = isRecountMode;
     setSubmitting(true);
     setError('');
     try {
+      const actualQty = parseInt(countState.qty, 10);
       await submitCount({
         sessionId:   session.id,
         masterItemId: currentItem.id,
@@ -152,15 +193,27 @@ export default function CounterApp({ token }: { token: string }) {
         productCd:   currentItem.productCd,
         productName: currentItem.productName,
         systemQty:   currentItem.systemQty,
-        actualQty:   parseInt(countState.qty, 10),
+        actualQty,
         staffName:   staffName,
         expiryDate:        countState.expiry || undefined,
         masterExpiryDate:  currentItem.expiryDate || undefined,
         masterLotNumber:   currentItem.lotNumber || undefined,
         comment:           countState.comment || undefined,
       });
-      setCounted(prev => new Set([...prev, currentItem.id]));
-      setScreen('item-list');
+      const diff = actualQty - currentItem.systemQty;
+      setCounted(prev => {
+        const next = new Map(prev);
+        next.set(currentItem.id, { diff, isRecounted: isRecounting, isAdded: false });
+        return next;
+      });
+      setCountResult({
+        productName: currentItem.productName,
+        systemQty:   currentItem.systemQty,
+        actualQty,
+        diff,
+      });
+      setIsRecountMode(false);
+      setScreen('count-result');
     } catch (e) {
       setError('送信に失敗しました: ' + String(e));
     } finally {
@@ -168,9 +221,10 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }
 
-  const shelfItems = items.sort((a, b) => a.location.localeCompare(b.location));
-  const doneCount  = shelfItems.filter(i => counted.has(i.id)).length;
-  const allDone    = shelfItems.length > 0 && doneCount === shelfItems.length;
+  const shelfItems    = items.sort((a, b) => a.location.localeCompare(b.location));
+  const doneCount     = shelfItems.filter(i => counted.has(i.id)).length;
+  const allDone       = shelfItems.length > 0 && doneCount === shelfItems.length;
+  const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
 
   // ── レンダリング ──────────────────────────────
   return (
@@ -188,6 +242,9 @@ export default function CounterApp({ token }: { token: string }) {
 
           {/* アイテム情報（コンパクト） */}
           <div className="mb-2 shrink-0">
+            {isRecountMode && (
+              <span className="inline-block mb-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">リカウントモード</span>
+            )}
             <p className="text-[11px] text-stone-400 mb-0.5">{currentItem.location} / {currentItem.productCd}</p>
             <p className="text-[15px] font-bold leading-snug text-stone-950">{currentItem.productName}</p>
             {currentItem.expiryDate && (
@@ -267,6 +324,120 @@ export default function CounterApp({ token }: { token: string }) {
       )}
 
       <div className={`px-4 py-5 max-w-md mx-auto ${screen === 'count-input' ? 'hidden' : ''}`}>
+
+        {/* ── 計数結果FB ── */}
+        {screen === 'count-result' && countResult && (
+          <div className="pt-6">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-2">
+                {countResult.diff === 0 ? '✅' : countResult.diff > 0 ? '📈' : '📉'}
+              </div>
+              <p className="text-sm text-stone-500 font-medium">計数完了</p>
+              <p className="text-base font-bold text-stone-900 mt-1 leading-snug">{countResult.productName}</p>
+            </div>
+
+            <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden mb-5">
+              <div className="grid grid-cols-3 divide-x divide-stone-100">
+                <div className="text-center py-5 px-3">
+                  <p className="text-[11px] text-stone-400 mb-1">理論値</p>
+                  <p className="text-2xl font-bold text-stone-700">{countResult.systemQty}</p>
+                </div>
+                <div className="text-center py-5 px-3">
+                  <p className="text-[11px] text-stone-400 mb-1">実数量</p>
+                  <p className="text-2xl font-bold text-stone-900">{countResult.actualQty}</p>
+                </div>
+                <div className="text-center py-5 px-3">
+                  <p className="text-[11px] text-stone-400 mb-1">差異</p>
+                  <p className={`text-2xl font-bold
+                    ${countResult.diff === 0 ? 'text-emerald-600'
+                    : countResult.diff > 0 ? 'text-red-600'
+                    : 'text-amber-600'}`}>
+                    {countResult.diff === 0 ? '±0' : countResult.diff > 0 ? `+${countResult.diff}` : countResult.diff}
+                  </p>
+                </div>
+              </div>
+              {countResult.diff !== 0 && (
+                <div className={`px-4 py-2.5 text-xs text-center font-medium
+                  ${countResult.diff > 0 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
+                  {countResult.diff > 0 ? `システムより ${countResult.diff} 個多い` : `システムより ${Math.abs(countResult.diff)} 個少ない`}
+                </div>
+              )}
+            </div>
+
+            <div className={`flex flex-col gap-3 ${countResult.diff !== 0 ? '' : ''}`}>
+              {countResult.diff !== 0 && (
+                <button
+                  onClick={() => {
+                    setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
+                    setError('');
+                    setScreen('count-input');
+                  }}
+                  className="w-full py-4 bg-white border-2 border-[#1A3A2A] text-[#1A3A2A] font-bold text-base rounded-xl active:scale-[0.98] transition-transform"
+                >
+                  もう一度計数する
+                </button>
+              )}
+              <button
+                onClick={() => setScreen('item-list')}
+                className="w-full py-4 bg-[#1A3A2A] text-white font-bold text-base rounded-xl active:scale-[0.98] transition-transform"
+              >
+                一覧に戻る
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── リカウント確認 ── */}
+        {screen === 'recount-confirm' && currentItem && countResult && (
+          <div className="pt-2">
+            <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} />
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">リカウントモード</span>
+            </div>
+            <h1 className="text-base font-bold text-stone-900 leading-snug mb-0.5">{currentItem.productName}</h1>
+            <p className="text-xs text-stone-400 mb-4">{currentItem.location} ／ {currentItem.productCd}</p>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden mb-5">
+              <p className="text-xs font-medium text-amber-700 px-4 pt-3 pb-2">前回の計数結果</p>
+              <div className="grid grid-cols-3 divide-x divide-amber-200 border-t border-amber-200">
+                <div className="text-center py-4 px-3">
+                  <p className="text-[11px] text-amber-600 mb-1">理論値</p>
+                  <p className="text-xl font-bold text-stone-700">{countResult.systemQty}</p>
+                </div>
+                <div className="text-center py-4 px-3">
+                  <p className="text-[11px] text-amber-600 mb-1">実数量</p>
+                  <p className="text-xl font-bold text-stone-900">{countResult.actualQty}</p>
+                </div>
+                <div className="text-center py-4 px-3">
+                  <p className="text-[11px] text-amber-600 mb-1">差異</p>
+                  <p className={`text-xl font-bold ${countResult.diff > 0 ? 'text-red-600' : 'text-amber-600'}`}>
+                    {countResult.diff > 0 ? `+${countResult.diff}` : countResult.diff}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
+                  setError('');
+                  setIsRecountMode(true);
+                  setScreen('count-input');
+                }}
+                className="w-full py-4 bg-[#1A3A2A] text-white font-bold text-base rounded-xl active:scale-[0.98] transition-transform"
+              >
+                リカウント開始
+              </button>
+              <button
+                onClick={() => setScreen('item-list')}
+                className="w-full py-3 border border-stone-300 text-stone-600 text-sm font-medium rounded-xl"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── ローディング ── */}
         {screen === 'loading' && (
@@ -374,7 +545,12 @@ export default function CounterApp({ token }: { token: string }) {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h1 className="text-lg font-bold">{shelfKey} 棚</h1>
-                <p className="text-sm text-stone-400">{doneCount}/{shelfItems.length}件完了</p>
+                <p className="text-sm text-stone-400">
+                  {doneCount}/{shelfItems.length}件完了
+                  {diffUnresolved > 0 && (
+                    <span className="ml-2 text-amber-600 font-medium">差異{diffUnresolved}件 要リカウント</span>
+                  )}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -399,22 +575,52 @@ export default function CounterApp({ token }: { token: string }) {
             </div>
             <div className="space-y-2">
               {shelfItems.map(item => {
-                const done = counted.has(item.id);
+                const info = counted.get(item.id);
+                const done = !!info;
+                const hasDiff = done && info.diff !== 0 && !info.isAdded;
+                const unrecounted = hasDiff && !info.isRecounted;       // 差異あり・未リカウント
+                const stillDiff   = hasDiff && info.isRecounted;        // リカウント済・差異継続
+                const resolved    = done && info.isRecounted && (info.diff === 0 || info.isAdded); // リカウント済・解消済
                 return (
                   <div
                     key={`${item.location}::${item.productCd}`}
                     onClick={() => openItem(item)}
-                    className="bg-white border border-stone-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer active:bg-stone-50"
+                    className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors
+                      ${unrecounted ? 'bg-amber-50 border-amber-200 active:bg-amber-100'
+                      : stillDiff   ? 'bg-red-50 border-red-200 active:bg-red-100'
+                      : 'bg-white border-stone-200 active:bg-stone-50'}`}
                   >
-                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${done ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0
+                      ${!done        ? 'bg-stone-300'
+                      : unrecounted  ? 'bg-amber-400'
+                      : stillDiff    ? 'bg-red-400'
+                      : 'bg-emerald-500'}`}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.productName}</p>
                       <p className="text-xs text-stone-400">{item.location} ／ {item.productCd}</p>
                       {item.expiryDate && <p className="text-xs text-amber-600">期限: {item.expiryDate}</p>}
+                      {unrecounted && (
+                        <p className="text-xs text-amber-700 font-medium mt-0.5">
+                          差異 {info.diff > 0 ? `+${info.diff}` : info.diff} ／ タップしてリカウント
+                        </p>
+                      )}
+                      {stillDiff && (
+                        <p className="text-xs text-red-600 font-medium mt-0.5">
+                          リカウント後も差異 {info.diff > 0 ? `+${info.diff}` : info.diff}
+                        </p>
+                      )}
+                      {resolved && (
+                        <p className="text-xs text-emerald-600 font-medium mt-0.5">リカウント済・解消</p>
+                      )}
                     </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded
-                      ${done ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>
-                      {done ? '済' : '未'}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0
+                      ${!done       ? 'bg-stone-100 text-stone-500'
+                      : unrecounted ? 'bg-amber-100 text-amber-700'
+                      : stillDiff   ? 'bg-red-100 text-red-600'
+                      : resolved    ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-emerald-50 text-emerald-700'}`}>
+                      {!done ? '未' : unrecounted ? '差異あり' : stillDiff ? '差異継続' : resolved ? '解消済' : '済'}
                     </span>
                   </div>
                 );
@@ -534,7 +740,11 @@ export default function CounterApp({ token }: { token: string }) {
                       masterExpiryDate: addForm.expiryDate.trim() || undefined,
                       isAdded: true,
                     });
-                    setCounted(prev => new Set([...prev, itemId]));
+                    setCounted(prev => {
+                      const next = new Map(prev);
+                      next.set(itemId, { diff: parseInt(addForm.qty || '0', 10), isRecounted: false, isAdded: true });
+                      return next;
+                    });
                     await loadShelfItems(shelfKey);
                     setScreen('item-list');
                   } catch (e) {
