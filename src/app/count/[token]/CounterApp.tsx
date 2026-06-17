@@ -535,21 +535,24 @@ export default function CounterApp({ token }: { token: string }) {
               {shelfItems.map(item => {
                 const info = counted.get(item.id);
                 const done = !!info;
-                const hasDiff = done && info.diff !== 0 && !info.isAdded;
-                const unrecounted = hasDiff && !info.isRecounted;  // 差異あり・未リカウント
-                const recounted   = done && info.isRecounted;      // リカウント済（差異有無問わず）
+                const hasDiff            = done && info.diff !== 0 && !info.isAdded;
+                const unrecounted        = hasDiff && !info.isRecounted;        // 差異あり・未リカウント
+                const recountedWithDiff  = hasDiff && info.isRecounted;         // リカウント済・差異継続
+                const recountedResolved  = done && info.isRecounted && !hasDiff; // リカウント済・解消
                 return (
                   <div
                     key={`${item.location}::${item.productCd}`}
                     onClick={() => openItem(item)}
                     className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors
-                      ${unrecounted ? 'bg-amber-50 border-amber-200 active:bg-amber-100'
-                      : done        ? 'bg-emerald-50 border-emerald-200 active:bg-emerald-100'
+                      ${unrecounted       ? 'bg-amber-50 border-amber-200 active:bg-amber-100'
+                      : recountedWithDiff ? 'bg-blue-50 border-blue-200 active:bg-blue-100'
+                      : done             ? 'bg-emerald-50 border-emerald-200 active:bg-emerald-100'
                       : 'bg-white border-stone-200 active:bg-stone-50'}`}
                   >
                     <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0
-                      ${!done       ? 'bg-stone-300'
-                      : unrecounted ? 'bg-amber-400'
+                      ${!done             ? 'bg-stone-300'
+                      : unrecounted       ? 'bg-amber-400'
+                      : recountedWithDiff ? 'bg-blue-400'
                       : 'bg-emerald-500'}`}
                     />
                     <div className="flex-1 min-w-0">
@@ -561,18 +564,21 @@ export default function CounterApp({ token }: { token: string }) {
                           差異 {info.diff > 0 ? `+${info.diff}` : info.diff} ／ タップしてリカウント
                         </p>
                       )}
-                      {recounted && (
-                        <p className="text-xs text-emerald-600 font-medium mt-0.5">
-                          差異 {info.diff === 0 ? '±0' : info.diff > 0 ? `+${info.diff}` : info.diff}
+                      {recountedWithDiff && (
+                        <p className="text-xs text-blue-600 font-medium mt-0.5">
+                          リカウント済 ／ 差異 {info.diff > 0 ? `+${info.diff}` : info.diff} 継続
                         </p>
+                      )}
+                      {recountedResolved && (
+                        <p className="text-xs text-emerald-600 font-medium mt-0.5">リカウント済 ／ 差異解消</p>
                       )}
                     </div>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0
-                      ${!done       ? 'bg-stone-100 text-stone-500'
-                      : unrecounted ? 'bg-amber-100 text-amber-700'
-                      : recounted   ? 'bg-blue-50 text-blue-600'
+                      ${!done             ? 'bg-stone-100 text-stone-500'
+                      : unrecounted       ? 'bg-amber-100 text-amber-700'
+                      : recountedWithDiff ? 'bg-blue-100 text-blue-700'
                       : 'bg-emerald-50 text-emerald-700'}`}>
-                      {!done ? '未' : unrecounted ? '差異あり' : recounted ? 'リカウント済' : '済'}
+                      {!done ? '未' : unrecounted ? '差異あり' : recountedWithDiff ? 'リカウント済' : '済'}
                     </span>
                   </div>
                 );
