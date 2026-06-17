@@ -106,6 +106,14 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }, [screen, loadShelves]);
 
+  // allDone になったら自動的に棚を完了にする
+  useEffect(() => {
+    if (allDone && session && shelfKey) {
+      completeShelf(session.id, shelfKey).then(() => loadShelves());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allDone]);
+
   // 棚のアイテム取得
   async function loadShelfItems(key: string) {
     if (!session) return;
@@ -378,10 +386,10 @@ export default function CounterApp({ token }: { token: string }) {
                 </button>
               )}
               <button
-                onClick={() => setScreen('item-list')}
+                onClick={() => setScreen(allDone ? 'shelf-complete' : 'item-list')}
                 className="w-full py-4 bg-[#1A3A2A] text-white font-bold text-base rounded-xl active:scale-[0.98] transition-transform"
               >
-                一覧に戻る
+                {allDone ? '棚完了 →' : '一覧に戻る'}
               </button>
             </div>
           </div>
@@ -565,18 +573,6 @@ export default function CounterApp({ token }: { token: string }) {
                 >
                   ＋ 商品追加
                 </button>
-                {allDone && (
-                  <button
-                    onClick={async () => {
-                      await completeShelf(session!.id, shelfKey);
-                      await loadShelves();
-                      setScreen('shelf-complete');
-                    }}
-                    className="px-4 py-2 bg-[#1A3A2A] text-white text-sm font-semibold rounded-lg"
-                  >
-                    完了にする
-                  </button>
-                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -626,18 +622,6 @@ export default function CounterApp({ token }: { token: string }) {
                 );
               })}
             </div>
-            {!allDone && (
-              <button
-                onClick={async () => {
-                  await completeShelf(session!.id, shelfKey);
-                  await loadShelves();
-                  setScreen('shelf-complete');
-                }}
-                className="w-full mt-4 py-3 border border-stone-300 text-stone-600 text-sm font-medium rounded-xl"
-              >
-                この棚を完了にする
-              </button>
-            )}
           </>
         )}
 
