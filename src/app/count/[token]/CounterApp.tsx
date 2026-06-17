@@ -486,7 +486,7 @@ export default function CounterApp({ token }: { token: string }) {
             <div className="space-y-2">
               {shelfList.map(s => {
                 const isPending       = s.pendingRecountCount > 0 && s.completedItems === s.totalItems;
-                const trulyCompleted  = s.isCompleted && s.pendingRecountCount === 0;
+                const trulyCompleted  = s.totalItems > 0 && s.completedItems === s.totalItems && s.pendingRecountCount === 0;
                 return (
                   <DrillItem
                     key={s.locationKey}
