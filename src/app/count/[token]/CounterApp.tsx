@@ -223,7 +223,7 @@ export default function CounterApp({ token }: { token: string }) {
 
   const shelfItems    = items.sort((a, b) => a.location.localeCompare(b.location));
   const doneCount     = shelfItems.filter(i => counted.has(i.id)).length;
-  const allDone       = shelfItems.length > 0 && doneCount === shelfItems.length;
+  const allDone       = shelfItems.length > 0 && doneCount === shelfItems.length && diffUnresolved === 0;
   const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
 
   // ── レンダリング ──────────────────────────────
@@ -524,16 +524,21 @@ export default function CounterApp({ token }: { token: string }) {
             <BackButton label="通路選択に戻る" onClick={() => setScreen('select-aisle')} />
             <DrillHeader title="棚を選択" sub={`${building}棟 ${aisle}通路`} />
             <div className="space-y-2">
-              {shelfList.map(s => (
-                <DrillItem
-                  key={s.locationKey}
-                  label={`${s.shelf}棚`}
-                  badge={s.isCompleted ? '完了' : `${s.completedItems}/${s.totalItems}件`}
-                  progress={s.completedItems / s.totalItems}
-                  isCompleted={s.isCompleted}
-                  onClick={() => selectShelf(s)}
-                />
-              ))}
+              {shelfList.map(s => {
+                const allCounted = s.totalItems > 0 && s.completedItems === s.totalItems;
+                const isPending  = allCounted && !s.isCompleted;
+                return (
+                  <DrillItem
+                    key={s.locationKey}
+                    label={`${s.shelf}棚`}
+                    badge={s.isCompleted ? '完了' : isPending ? 'リカウント待ち' : `${s.completedItems}/${s.totalItems}件`}
+                    progress={s.completedItems / s.totalItems}
+                    isCompleted={s.isCompleted}
+                    isPending={isPending}
+                    onClick={() => selectShelf(s)}
+                  />
+                );
+              })}
             </div>
           </>
         )}
@@ -810,8 +815,8 @@ function BackButton({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-function DrillItem({ label, badge, badgeColor, progress, isCompleted, onClick }: {
-  label: string; badge: string; badgeColor?: string; progress?: number; isCompleted?: boolean; onClick: () => void;
+function DrillItem({ label, badge, badgeColor, progress, isCompleted, isPending, onClick }: {
+  label: string; badge: string; badgeColor?: string; progress?: number; isCompleted?: boolean; isPending?: boolean; onClick: () => void;
 }) {
   return (
     <div
@@ -819,13 +824,16 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, onClick }:
       className={`rounded-xl px-4 py-3.5 flex items-center justify-between cursor-pointer transition-all
         ${isCompleted
           ? 'bg-emerald-500 border border-emerald-500 active:bg-emerald-600'
+          : isPending
+          ? 'bg-amber-400 border border-amber-400 active:bg-amber-500'
           : 'bg-white border border-stone-200 active:bg-stone-50'}`}
     >
       <div className="flex items-center gap-2.5 flex-1">
         {isCompleted && <span className="text-white text-base font-bold">✓</span>}
+        {isPending && <span className="text-white text-base font-bold">!</span>}
         <div>
-          <span className={`font-medium text-sm ${isCompleted ? 'text-white' : 'text-stone-900'}`}>{label}</span>
-          {!isCompleted && progress !== undefined && progress > 0 && (
+          <span className={`font-medium text-sm ${isCompleted || isPending ? 'text-white' : 'text-stone-900'}`}>{label}</span>
+          {!isCompleted && !isPending && progress !== undefined && progress > 0 && (
             <div className="h-1 bg-stone-100 rounded-full mt-1.5 w-24">
               <div className="h-full bg-[#4A7A5A] rounded-full" style={{ width: `${Math.min(100, progress * 100)}%` }} />
             </div>
@@ -833,7 +841,7 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, onClick }:
         </div>
       </div>
       <span className={`text-xs font-medium px-2 py-0.5 rounded
-        ${isCompleted ? 'bg-white/20 text-white' : `bg-stone-100 text-stone-500 ${badgeColor ?? ''}`}`}>
+        ${isCompleted || isPending ? 'bg-white/20 text-white' : `bg-stone-100 text-stone-500 ${badgeColor ?? ''}`}`}>
         {badge}
       </span>
     </div>
