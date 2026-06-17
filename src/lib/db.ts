@@ -217,8 +217,9 @@ export async function submitCount(data: {
   );
 
   if (isRecount) {
-    // 元担当者名を保持し、リカウント担当者として別フィールドに保存
+    // 元担当者名・hasDiff を保持し、リカウント担当者として別フィールドに保存
     delete payload.staffName;
+    delete payload.hasDiff;   // 初回計数時の hasDiff を上書きしない
     payload.recountStaffName = data.staffName;
     await updateDoc(existing.docs[0].ref, payload);
   } else {

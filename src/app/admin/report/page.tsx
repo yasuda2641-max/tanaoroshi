@@ -269,10 +269,10 @@ function ReportContent() {
                           )}
                         </td>
                         <td className="px-3 py-3 text-center">
-                          {r.isRecounted
-                            ? <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">済</span>
-                            : r.hasDiff
-                            ? <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">未</span>
+                          {r.hasDiff
+                            ? r.isRecounted
+                              ? <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">済</span>
+                              : <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">未</span>
                             : <span className="text-stone-300 text-xs">-</span>
                           }
                         </td>
