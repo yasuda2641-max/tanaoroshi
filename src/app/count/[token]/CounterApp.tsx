@@ -214,12 +214,6 @@ export default function CounterApp({ token }: { token: string }) {
   const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
   const allDone        = allShelfItems.length > 0 && doneCount === allShelfItems.length && diffUnresolved === 0;
 
-  // デバッグ: counted Mapの中身をコンソールに出力（問題調査用、後で削除）
-  if (screen === 'item-list' && typeof window !== 'undefined') {
-    const debugEntries = [...counted.entries()].map(([id, v]) => `${id.slice(-4)}:diff=${v.diff},recount=${v.isRecounted}`).join(' | ');
-    console.log(`[recount debug] mode=${isRecountMode ? 'RECOUNT' : 'COUNT'} items=${items.length} counted=${counted.size} shelfItems=${shelfItems.length} entries=[${debugEntries}]`);
-  }
-
   // allDone になったら自動的に棚を完了にする（宣言後に配置してTDZを回避）
   useEffect(() => {
     if (allDone && session && shelfKey) {
@@ -547,7 +541,7 @@ export default function CounterApp({ token }: { token: string }) {
                 const recountedResolved  = done && info.isRecounted && !hasDiff; // リカウント済・解消
                 return (
                   <div
-                    key={`${item.location}::${item.productCd}`}
+                    key={item.id}
                     onClick={() => openItem(item)}
                     className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors
                       ${unrecounted       ? 'bg-amber-50 border-amber-200 active:bg-amber-100'
