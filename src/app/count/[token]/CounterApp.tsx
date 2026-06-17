@@ -11,7 +11,6 @@ type Screen =
   | 'select-aisle'
   | 'select-shelf'
   | 'item-list'
-  | 'recount-confirm'
   | 'count-input'
   | 'count-result'
   | 'shelf-complete'
@@ -129,6 +128,7 @@ export default function CounterApp({ token }: { token: string }) {
   async function selectShelf(s: ShelfProgress) {
     setShelf(s.shelf);
     setShelfKey(s.locationKey);
+    setIsRecountMode(false); // 棚を切り替えたら計数モードにリセット
     await loadShelfItems(s.locationKey);
     // 計数済みアイテムを取得してMapに
     const recs = await getCountRecords(session!.id);
@@ -149,21 +149,7 @@ export default function CounterApp({ token }: { token: string }) {
     setCurrentItem(item);
     setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
     setError('');
-    const info = counted.get(item.id);
-    if (info && info.diff !== 0 && !info.isAdded) {
-      // 差異あり → リカウント確認画面へ
-      setCountResult({
-        productName: item.productName,
-        systemQty: item.systemQty,
-        actualQty: item.systemQty + info.diff,
-        diff: info.diff,
-      });
-      setIsRecountMode(false);
-      setScreen('recount-confirm');
-    } else {
-      setIsRecountMode(false);
-      setScreen('count-input');
-    }
+    setScreen('count-input');
   }
 
   function keyPress(k: string) {
@@ -212,7 +198,6 @@ export default function CounterApp({ token }: { token: string }) {
         actualQty,
         diff,
       });
-      setIsRecountMode(false);
       setScreen('count-result');
     } catch (e) {
       setError('送信に失敗しました: ' + String(e));
@@ -240,11 +225,26 @@ export default function CounterApp({ token }: { token: string }) {
       {/* ステータスバー風ヘッダー */}
       <div className={`px-4 h-12 flex items-center justify-between sticky top-0 z-10 transition-colors
         ${isRecountMode ? 'bg-amber-500' : 'bg-[#1A3A2A]'}`}>
-        <div className="flex items-center gap-2 min-w-0">
-          {isRecountMode && <span className="text-white text-xs font-bold bg-white/20 px-2 py-0.5 rounded shrink-0">リカウント</span>}
-          <span className="text-white/90 text-sm font-medium truncate">{session?.name ?? '棚卸し'}</span>
+        <span className="text-white/90 text-sm font-medium truncate flex-1 min-w-0">{session?.name ?? '棚卸し'}</span>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          {(screen === 'item-list' || screen === 'count-input' || screen === 'count-result') && (
+            <div className="flex items-center bg-white/20 rounded-full p-0.5 text-[11px] font-semibold">
+              <button
+                onClick={() => setIsRecountMode(false)}
+                className={`px-2.5 py-0.5 rounded-full transition-colors ${!isRecountMode ? 'bg-white text-[#1A3A2A]' : 'text-white/80'}`}
+              >
+                計数
+              </button>
+              <button
+                onClick={() => setIsRecountMode(true)}
+                className={`px-2.5 py-0.5 rounded-full transition-colors ${isRecountMode ? 'bg-white text-amber-600' : 'text-white/80'}`}
+              >
+                リカウント
+              </button>
+            </div>
+          )}
+          <span className="text-white/60 text-xs">{staffName}</span>
         </div>
-        <span className="text-white/70 text-xs shrink-0 ml-2">{staffName}</span>
       </div>
 
       {/* ── 計数入力（フルハイト専用レイアウト） ── */}
@@ -391,58 +391,6 @@ export default function CounterApp({ token }: { token: string }) {
                 className="w-full py-4 bg-[#1A3A2A] text-white font-bold text-base rounded-xl active:scale-[0.98] transition-transform"
               >
                 {allDone ? '棚完了 →' : '一覧に戻る'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── リカウント確認 ── */}
-        {screen === 'recount-confirm' && currentItem && countResult && (
-          <div className="pt-2">
-            <BackButton label="一覧に戻る" onClick={() => setScreen('item-list')} />
-            <div className="flex items-center gap-2 mb-4">
-              <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">リカウントモード</span>
-            </div>
-            <h1 className="text-base font-bold text-stone-900 leading-snug mb-0.5">{currentItem.productName}</h1>
-            <p className="text-xs text-stone-400 mb-4">{currentItem.location} ／ {currentItem.productCd}</p>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden mb-5">
-              <p className="text-xs font-medium text-amber-700 px-4 pt-3 pb-2">前回の計数結果</p>
-              <div className="grid grid-cols-3 divide-x divide-amber-200 border-t border-amber-200">
-                <div className="text-center py-4 px-3">
-                  <p className="text-[11px] text-amber-600 mb-1">理論値</p>
-                  <p className="text-xl font-bold text-stone-700">{countResult.systemQty}</p>
-                </div>
-                <div className="text-center py-4 px-3">
-                  <p className="text-[11px] text-amber-600 mb-1">実数量</p>
-                  <p className="text-xl font-bold text-stone-900">{countResult.actualQty}</p>
-                </div>
-                <div className="text-center py-4 px-3">
-                  <p className="text-[11px] text-amber-600 mb-1">差異</p>
-                  <p className={`text-xl font-bold ${countResult.diff > 0 ? 'text-red-600' : 'text-amber-600'}`}>
-                    {countResult.diff > 0 ? `+${countResult.diff}` : countResult.diff}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setCountState({ scanned: false, qty: '', expiryOpen: false, expiry: '', comment: '' });
-                  setError('');
-                  setIsRecountMode(true);
-                  setScreen('count-input');
-                }}
-                className="w-full py-4 bg-[#1A3A2A] text-white font-bold text-base rounded-xl active:scale-[0.98] transition-transform"
-              >
-                リカウント開始
-              </button>
-              <button
-                onClick={() => setScreen('item-list')}
-                className="w-full py-3 border border-stone-300 text-stone-600 text-sm font-medium rounded-xl"
-              >
-                キャンセル
               </button>
             </div>
           </div>
