@@ -106,14 +106,6 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }, [screen, loadShelves]);
 
-  // allDone になったら自動的に棚を完了にする
-  useEffect(() => {
-    if (allDone && session && shelfKey) {
-      completeShelf(session.id, shelfKey).then(() => loadShelves());
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allDone]);
-
   // 棚のアイテム取得
   async function loadShelfItems(key: string) {
     if (!session) return;
@@ -233,6 +225,14 @@ export default function CounterApp({ token }: { token: string }) {
   const doneCount      = shelfItems.filter(i => counted.has(i.id)).length;
   const diffUnresolved = [...counted.values()].filter(c => c.diff !== 0 && !c.isRecounted && !c.isAdded).length;
   const allDone        = shelfItems.length > 0 && doneCount === shelfItems.length && diffUnresolved === 0;
+
+  // allDone になったら自動的に棚を完了にする（宣言後に配置してTDZを回避）
+  useEffect(() => {
+    if (allDone && session && shelfKey) {
+      completeShelf(session.id, shelfKey).then(() => loadShelves());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allDone]);
 
   // ── レンダリング ──────────────────────────────
   return (
