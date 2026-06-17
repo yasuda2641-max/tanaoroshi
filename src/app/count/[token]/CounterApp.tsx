@@ -113,9 +113,10 @@ export default function CounterApp({ token }: { token: string }) {
   }
 
   // 建物・通路・棚の一覧生成
-  const buildings = [...new Set(shelves.map(s => s.building))].sort();
-  const aisles    = [...new Set(shelves.filter(s => s.building === building).map(s => s.aisle))].sort();
-  const shelfList = shelves.filter(s => s.building === building && s.aisle === aisle);
+  const visibleShelves = isRecountMode ? shelves.filter(s => s.pendingRecountCount > 0) : shelves;
+  const buildings = [...new Set(visibleShelves.map(s => s.building))].sort();
+  const aisles    = [...new Set(visibleShelves.filter(s => s.building === building).map(s => s.aisle))].sort();
+  const shelfList = visibleShelves.filter(s => s.building === building && s.aisle === aisle);
 
   function startCount() {
     if (!staffName.trim()) { setError('担当者名を入力してください'); return; }
