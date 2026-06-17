@@ -204,6 +204,7 @@ export async function submitCount(data: {
     where('masterItemId', '==', data.masterItemId),
   ));
 
+  const isRecount = !existing.empty;
   const payload = Object.fromEntries(
     Object.entries({
       ...data,
@@ -211,11 +212,14 @@ export async function submitCount(data: {
       diffRate,
       hasDiff: diff !== 0,
       countedAt: serverTimestamp(),
-      isRecounted: !existing.empty,
+      isRecounted: isRecount,
     }).filter(([, v]) => v !== undefined)
   );
 
-  if (!existing.empty) {
+  if (isRecount) {
+    // 元担当者名を保持し、リカウント担当者として別フィールドに保存
+    delete payload.staffName;
+    payload.recountStaffName = data.staffName;
     await updateDoc(existing.docs[0].ref, payload);
   } else {
     const batch = writeBatch(db);

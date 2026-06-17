@@ -54,6 +54,7 @@ export interface CountRecord {
   comment?: string;           // 差異原因コメント
   causeCategory?: string;
   isRecounted?: boolean;      // リカウント済み
+  recountStaffName?: string;  // リカウント担当者
   recountOk?: boolean;        // 管理者リカウントOK確認済み
   isAdded?: boolean;          // 計数者が現場で追加した商品
 }

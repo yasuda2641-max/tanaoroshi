@@ -97,7 +97,7 @@ function ReportContent() {
     if (!selectedId) return;
     const [items, recs] = await Promise.all([getMasterItems(selectedId), Promise.resolve(records)]);
     const recMap = new Map(recs.map(r => [r.masterItemId, r]));
-    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,出荷期限日,担当者,差異原因,コメント,リカウントOK,追加商品,計数日時\n';
+    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,出荷期限日,担当者,リカウント担当者,差異原因,コメント,リカウントOK,追加商品,計数日時\n';
     const rows = items.map(item => {
       const r = recMap.get(item.id);
       const cols = [
@@ -109,6 +109,7 @@ function ReportContent() {
         r ? r.diff : '',
         item.expiryDate ?? '',
         r ? r.staffName : '',
+        r ? (r.recountStaffName ?? '') : '',
         r ? (r.causeCategory ?? '') : '',
         r ? `"${(r.comment ?? '').replace(/"/g, '""')}"` : '""',
         r ? (r.recountOk ? 'OK' : '') : '',
@@ -126,7 +127,7 @@ function ReportContent() {
 
   function exportAllCsv() {
     if (records.length === 0) { alert('計数データがありません。'); return; }
-    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,出荷期限日,担当者,差異原因,コメント,リカウントOK,追加商品,計数日時\n';
+    const header = 'ロケーション,商品CD,商品名,システム数量,実数量,差異,出荷期限日,担当者,リカウント担当者,差異原因,コメント,リカウントOK,追加商品,計数日時\n';
     const rows = records.map(r => {
       const cols = [
         r.location,
@@ -137,6 +138,7 @@ function ReportContent() {
         r.diff,
         r.masterExpiryDate ?? '',
         r.staffName,
+        r.recountStaffName ?? '',
         r.causeCategory ?? '',
         `"${(r.comment ?? '').replace(/"/g, '""')}"`,
         r.recountOk ? 'OK' : '',
@@ -260,7 +262,12 @@ function ReportContent() {
                         <td className="px-3 py-3 text-right font-semibold text-stone-900">{r.actualQty}</td>
                         <td className="px-3 py-3 text-center"><DiffValue diff={r.diff} /></td>
                         <td className="px-3 py-3 text-xs text-stone-500">{r.masterExpiryDate ?? '-'}</td>
-                        <td className="px-3 py-3 text-xs text-stone-500">{r.staffName}</td>
+                        <td className="px-3 py-3 text-xs text-stone-500">
+                          <div>{r.staffName}</div>
+                          {r.recountStaffName && (
+                            <div className="text-stone-400 mt-0.5">↺ {r.recountStaffName}</div>
+                          )}
+                        </td>
                         <td className="px-3 py-3 text-center">
                           {r.hasDiff
                             ? r.isRecounted
