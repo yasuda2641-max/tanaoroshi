@@ -525,15 +525,16 @@ export default function CounterApp({ token }: { token: string }) {
             <DrillHeader title="棚を選択" sub={`${building}棟 ${aisle}通路`} />
             <div className="space-y-2">
               {shelfList.map(s => {
-                const allCounted = s.totalItems > 0 && s.completedItems === s.totalItems;
-                const isPending  = allCounted && !s.isCompleted;
+                const allCounted      = s.totalItems > 0 && s.completedItems === s.totalItems;
+                const isPending       = (allCounted && !s.isCompleted) || (s.isCompleted && s.pendingRecountCount > 0);
+                const trulyCompleted  = s.isCompleted && s.pendingRecountCount === 0;
                 return (
                   <DrillItem
                     key={s.locationKey}
                     label={`${s.shelf}棚`}
-                    badge={s.isCompleted ? '完了' : isPending ? 'リカウント待ち' : `${s.completedItems}/${s.totalItems}件`}
+                    badge={trulyCompleted ? '完了' : isPending ? 'リカウント待ち' : `${s.completedItems}/${s.totalItems}件`}
                     progress={s.completedItems / s.totalItems}
-                    isCompleted={s.isCompleted}
+                    isCompleted={trulyCompleted}
                     isPending={isPending}
                     onClick={() => selectShelf(s)}
                   />

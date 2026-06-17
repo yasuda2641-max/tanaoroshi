@@ -138,6 +138,7 @@ export async function getShelvesForSession(
     fetchCompleted ? getDoc(doc(db, COL_SESSIONS, sessionId)) : Promise.resolve(null),
   ]);
   const countedSet = new Set(counts.map(c => c.masterItemId));
+  const countMap   = new Map(counts.map(c => [c.masterItemId, c]));
   const completedShelfKeys = new Set<string>(
     knownCompletedShelfKeys ?? ((sessSnap?.data()?.completedShelfKeys as string[]) ?? [])
   );
@@ -153,12 +154,15 @@ export async function getShelvesForSession(
         totalItems: 0,
         completedItems: 0,
         isCompleted: false,
+        pendingRecountCount: 0,
       });
     }
     const prog = map.get(item.locationKey)!;
     prog.totalItems++;
     if (countedSet.has(item.id)) prog.completedItems++;
     prog.isCompleted = completedShelfKeys.has(item.locationKey);
+    const rec = countMap.get(item.id);
+    if (rec && rec.hasDiff && !rec.isRecounted && !rec.isAdded) prog.pendingRecountCount++;
   }
   return Array.from(map.values()).sort((a, b) => a.locationKey.localeCompare(b.locationKey));
 }

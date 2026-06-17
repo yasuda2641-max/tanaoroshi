@@ -66,4 +66,5 @@ export interface ShelfProgress {
   totalItems: number;
   completedItems: number;
   isCompleted: boolean;
+  pendingRecountCount: number; // 差異あり・未リカウントのアイテム数
 }
