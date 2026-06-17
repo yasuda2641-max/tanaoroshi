@@ -8,7 +8,7 @@ import {
   Textarea, Loading, EmptyState, Alert, CopyButton, TableSkeleton
 } from '@/components/ui';
 
-type Filter = 'all' | 'plus' | 'minus' | 'comment' | 'added';
+type Filter = 'all' | 'plus' | 'minus' | 'added' | 'recount' | 'comment';
 
 const CAUSE_OPTIONS = [
   '計数ミス（再カウント済）',
@@ -67,11 +67,14 @@ function ReportContent() {
 
   const addedRecords = records.filter(r => r.isAdded);
 
+  const recountRecords = records.filter(r => r.isRecounted);
+
   const filtered = records.filter(r => {
     if (filter === 'plus')      return r.diff > 0;
     if (filter === 'minus')     return r.diff < 0;
-    if (filter === 'comment')   return !!r.comment;
     if (filter === 'added')     return r.isAdded;
+    if (filter === 'recount')   return !!r.isRecounted;
+    if (filter === 'comment')   return !!r.comment;
     return true;
   });
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -237,10 +240,11 @@ function ReportContent() {
         <div className="flex gap-2 flex-wrap">
           {([
             ['all',       `すべて（${records.length}）`],
-            ['plus',      `数量超過（${diffRecords.filter(r=>r.diff>0).length}）`],
-            ['minus',     `数量不足（${diffRecords.filter(r=>r.diff<0).length}）`],
-            ['comment',   `コメントあり（${commentRecords.length}）`],
+            ['plus',      `差異（超過）（${diffRecords.filter(r=>r.diff>0).length}）`],
+            ['minus',     `差異（不足）（${diffRecords.filter(r=>r.diff<0).length}）`],
             ['added',     `追加商品（${addedRecords.length}）`],
+            ['recount',   `リカウント（${recountRecords.length}）`],
+            ['comment',   `備考（${commentRecords.length}）`],
           ] as [Filter, string][]).map(([f, label]) => (
             <button
               key={f}
