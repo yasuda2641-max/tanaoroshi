@@ -239,7 +239,7 @@ function ReportContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','出荷期限日','担当者','リカウント','原因コメント',''].map(h => (
+                    {['ロケーション','商品CD','商品名','システム数量','実数量','差異','出荷期限日','担当者','リカウント','備考'].map(h => (
                       <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-stone-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -276,14 +276,11 @@ function ReportContent() {
                             : <span className="text-stone-300 text-xs">-</span>
                           }
                         </td>
-                        <td className="px-3 py-3 max-w-[160px]">
+                        <td className="px-3 py-3 max-w-[160px] cursor-pointer group" onClick={() => openComment(r)}>
                           {r.comment
-                            ? <span className="text-xs text-stone-700 line-clamp-2">{r.comment}</span>
-                            : <span className="text-xs text-stone-400">未記入</span>
+                            ? <span className="text-xs text-stone-700 line-clamp-2 group-hover:text-stone-900">{r.comment}</span>
+                            : <span className="text-xs text-stone-300 group-hover:text-stone-400">備考を追加...</span>
                           }
-                        </td>
-                        <td className="px-3 py-3">
-                          <Button size="sm" onClick={() => openComment(r)}>コメント</Button>
                         </td>
                       </tr>
                     );
@@ -341,7 +338,7 @@ function ReportContent() {
       </div>
 
       {/* コメントモーダル */}
-      <Modal open={!!modalRec} onClose={() => setModalRec(null)} title="差異原因コメント">
+      <Modal open={!!modalRec} onClose={() => setModalRec(null)} title="備考">
         {modalRec && (
           <div className="space-y-4">
             <div className="text-sm text-stone-500">{modalRec.productCd} ／ {modalRec.productName}</div>
@@ -361,7 +358,7 @@ function ReportContent() {
               </select>
             </div>
             <Textarea
-              label="詳細コメント（任意）"
+              label="備考（任意）"
               value={comment}
               onChange={e => setComment(e.target.value)}
               rows={3}
