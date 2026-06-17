@@ -604,7 +604,9 @@ export default function CounterApp({ token }: { token: string }) {
                         </p>
                       )}
                       {recounted && (
-                        <p className="text-xs text-emerald-600 font-medium mt-0.5">リカウント済</p>
+                        <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                          差異 {info.diff === 0 ? '±0' : info.diff > 0 ? `+${info.diff}` : info.diff}
+                        </p>
                       )}
                     </div>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0
