@@ -586,6 +586,7 @@ export default function CounterApp({ token }: { token: string }) {
                     onClick={() => openItem(item)}
                     className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors
                       ${unrecounted ? 'bg-amber-50 border-amber-200 active:bg-amber-100'
+                      : done        ? 'bg-emerald-50 border-emerald-200 active:bg-emerald-100'
                       : 'bg-white border-stone-200 active:bg-stone-50'}`}
                   >
                     <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0
