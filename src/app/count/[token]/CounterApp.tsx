@@ -487,11 +487,16 @@ export default function CounterApp({ token }: { token: string }) {
               {shelfList.map(s => {
                 const isPending       = s.pendingRecountCount > 0 && s.completedItems === s.totalItems;
                 const trulyCompleted  = s.totalItems > 0 && s.completedItems === s.totalItems && s.pendingRecountCount === 0;
+                const totalDiff       = s.recountedCount + s.pendingRecountCount;
+                const countBadge      = trulyCompleted ? '完了'
+                  : isPending ? `リカウント ${s.recountedCount}/${totalDiff}件`
+                  : s.pendingRecountCount > 0 ? `${s.completedItems}/${s.totalItems}件 差異${s.pendingRecountCount}`
+                  : `${s.completedItems}/${s.totalItems}件`;
                 return (
                   <DrillItem
                     key={s.locationKey}
                     label={`${s.shelf}棚`}
-                    badge={trulyCompleted ? '完了' : isPending ? `リカウント ${s.pendingRecountCount}件` : `${s.completedItems}/${s.totalItems}件`}
+                    badge={countBadge}
                     progress={s.completedItems / s.totalItems}
                     isCompleted={trulyCompleted}
                     isPending={isPending}

@@ -155,6 +155,7 @@ export async function getShelvesForSession(
         completedItems: 0,
         isCompleted: false,
         pendingRecountCount: 0,
+        recountedCount: 0,
       });
     }
     const prog = map.get(item.locationKey)!;
@@ -162,7 +163,10 @@ export async function getShelvesForSession(
     if (countedSet.has(item.id)) prog.completedItems++;
     prog.isCompleted = completedShelfKeys.has(item.locationKey);
     const rec = countMap.get(item.id);
-    if (rec && rec.hasDiff && !rec.isRecounted && !rec.isAdded) prog.pendingRecountCount++;
+    if (rec && rec.hasDiff && !rec.isAdded) {
+      if (rec.isRecounted) prog.recountedCount++;
+      else prog.pendingRecountCount++;
+    }
   }
   return Array.from(map.values()).sort((a, b) => a.locationKey.localeCompare(b.locationKey));
 }
