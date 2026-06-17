@@ -105,13 +105,6 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }, [screen, loadShelves]);
 
-  // 棚のアイテム取得
-  async function loadShelfItems(key: string) {
-    if (!session) return;
-    const all = await getMasterItems(session.id);
-    setItems(all.filter(i => i.locationKey === key));
-  }
-
   // 建物・通路・棚の一覧生成
   const visibleShelves = isRecountMode ? shelves.filter(s => s.pendingRecountCount > 0) : shelves;
   const buildings = [...new Set(visibleShelves.map(s => s.building))].sort();
@@ -129,12 +122,18 @@ export default function CounterApp({ token }: { token: string }) {
   async function selectShelf(s: ShelfProgress) {
     setShelf(s.shelf);
     setShelfKey(s.locationKey);
-    await loadShelfItems(s.locationKey);
-    // 計数済みアイテムを取得してMapに
-    const recs = await getCountRecords(session!.id);
+    // アイテムと計数レコードを並列取得
+    const [all, recs] = await Promise.all([
+      getMasterItems(session!.id),
+      getCountRecords(session!.id),
+    ]);
+    const shelfItems = all.filter(i => i.locationKey === s.locationKey);
+    const shelfItemIds = new Set(shelfItems.map(i => i.id));
+    setItems(shelfItems);
+    // masterItemId で厳密に絞る（startsWith は別棚のレコードを混入させる恐れあり）
     const map = new Map(
       recs
-        .filter(r => r.location.startsWith(s.locationKey))
+        .filter(r => shelfItemIds.has(r.masterItemId))
         .map(r => [r.masterItemId, {
           diff: r.diff,
           isRecounted: r.isRecounted ?? false,
@@ -167,7 +166,8 @@ export default function CounterApp({ token }: { token: string }) {
   async function submitItem() {
     if (!countState.qty) { setError('数量を入力してください'); return; }
     if (!currentItem || !session) return;
-    const isRecounting = isRecountMode;
+    // リカウントモードで計数 or 既にリカウント済みならtrue（一度recountedになったらリセットしない）
+    const isRecounting = isRecountMode || (counted.get(currentItem.id)?.isRecounted ?? false);
     setSubmitting(true);
     setError('');
     try {
@@ -206,7 +206,7 @@ export default function CounterApp({ token }: { token: string }) {
     }
   }
 
-  const allShelfItems  = items.sort((a, b) => a.location.localeCompare(b.location));
+  const allShelfItems  = [...items].sort((a, b) => a.location.localeCompare(b.location));
   const shelfItems     = isRecountMode
     ? allShelfItems.filter(i => { const c = counted.get(i.id); return c && c.diff !== 0 && !c.isRecounted && !c.isAdded; })
     : allShelfItems;
@@ -691,7 +691,8 @@ export default function CounterApp({ token }: { token: string }) {
                       next.set(itemId, { diff: parseInt(addForm.qty || '0', 10), isRecounted: false, isAdded: true });
                       return next;
                     });
-                    await loadShelfItems(shelfKey);
+                    const allItems = await getMasterItems(session!.id);
+                    setItems(allItems.filter(i => i.locationKey === shelfKey));
                     setScreen('item-list');
                   } catch (e) {
                     setAddError('追加に失敗しました: ' + String(e));
