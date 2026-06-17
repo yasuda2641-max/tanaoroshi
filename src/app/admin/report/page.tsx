@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { listSessions, getCountRecords, getMasterItems, updateComment } from '@/lib/db';
 import type { InventorySession, CountRecord } from '@/types';
 import {
-  Badge, Button, Card, Select, StatCard, Modal,
+  Badge, Button, Card, Select, Modal,
   Textarea, Loading, EmptyState, Alert, CopyButton, TableSkeleton
 } from '@/components/ui';
 
@@ -197,8 +197,19 @@ function ReportContent() {
         )}
 
         {/* サマリー */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard label="完了アイテム" value={completedCount} sub={`全${session?.totalItems ?? 0}件中 ${pct}%`} />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+            <div className="text-xs font-medium text-stone-400 mb-1">進捗</div>
+            <div className="flex items-end gap-2">
+              <span className="text-2xl font-bold text-stone-900">{completedCount}</span>
+              <span className="text-sm text-stone-400 mb-0.5">/ {session?.totalItems ?? 0}件</span>
+              <span className="text-2xl font-bold text-stone-900 ml-auto">{pct}%</span>
+            </div>
+            <div className="mt-2 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+              <div className="h-full bg-stone-700 rounded-full transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="text-xs text-stone-400 mt-1.5">{session?.status === 'completed' ? '完了' : '進行中'}</div>
+          </div>
           <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
             <div className="text-xs font-medium text-stone-400 mb-1">差異あり</div>
             <div className={`text-2xl font-bold ${diffRecords.length > 0 ? 'text-red-600' : 'text-stone-900'}`}>{diffRecords.length}</div>
@@ -206,7 +217,6 @@ function ReportContent() {
               超過 {diffRecords.filter(r => r.diff > 0).length}件 ／ 不足 {diffRecords.filter(r => r.diff < 0).length}件
             </div>
           </div>
-          <StatCard label="進捗" value={`${pct}%`} sub={session?.status === 'completed' ? '完了' : '進行中'} />
         </div>
 
         {/* フィルタ */}
