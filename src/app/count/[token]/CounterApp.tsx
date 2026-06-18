@@ -579,7 +579,7 @@ export default function CounterApp({ token }: { token: string }) {
                       {item.expiryDate && <p className="text-xs text-amber-500">期限: {item.expiryDate}</p>}
                       {unrecounted && (
                         <p className={`text-xs font-medium mt-0.5 ${dm ? 'text-amber-400' : 'text-amber-700'}`}>
-                          差異 {info.diff > 0 ? `+${info.diff}` : info.diff} ／ タップしてリカウント
+                          差異 {info.diff > 0 ? `+${info.diff}` : info.diff}
                         </p>
                       )}
                       {recountedWithDiff && (
