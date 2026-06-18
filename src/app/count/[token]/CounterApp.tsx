@@ -98,7 +98,7 @@ export default function CounterApp({ token }: { token: string }) {
 
   useEffect(() => { loadShelves(); }, [loadShelves]);
 
-  // 棟・通路・棚の選択画面に移動するたびに進捗を再取得
+  // エリア・通路・棚の選択画面に移動するたびに進捗を再取得
   useEffect(() => {
     if (['select-building', 'select-aisle', 'select-shelf'].includes(screen)) {
       loadShelves();
@@ -476,17 +476,17 @@ export default function CounterApp({ token }: { token: string }) {
           </div>
         )}
 
-        {/* ── 棟選択 ── */}
+        {/* ── エリア選択 ── */}
         {screen === 'select-building' && (
           <>
-            <DrillHeader title="棟を選択" sub="担当する棟を選んでください" dark={dm} />
+            <DrillHeader title="エリアを選択" sub="担当するエリアを選んでください" dark={dm} />
             <div className="space-y-2">
               {buildings.map(b => {
                 const s = shelves.filter(s => s.building === b);
                 const done = s.filter(s => s.isCompleted).length;
                 const allCompleted = s.length > 0 && done === s.length;
                 return (
-                  <DrillItem key={b} label={`${b}棟`} badge={allCompleted ? '完了' : `${done}/${s.length}棚`} progress={done/s.length}
+                  <DrillItem key={b} label={`${b}エリア`} badge={allCompleted ? '完了' : `${done}/${s.length}棚`} progress={done/s.length}
                     isCompleted={allCompleted} dark={dm}
                     onClick={() => selectBuilding(b)} />
                 );
@@ -498,8 +498,8 @@ export default function CounterApp({ token }: { token: string }) {
         {/* ── 通路選択 ── */}
         {screen === 'select-aisle' && (
           <>
-            <BackButton label="棟選択に戻る" onClick={() => setScreen('select-building')} dark={dm} />
-            <DrillHeader title="通路を選択" sub={`${building}棟`} dark={dm} />
+            <BackButton label="エリア選択に戻る" onClick={() => setScreen('select-building')} dark={dm} />
+            <DrillHeader title="通路を選択" sub={`${building}エリア`} dark={dm} />
             <div className="space-y-2">
               {aisles.map(a => {
                 const s = shelves.filter(s => s.building === building && s.aisle === a);
@@ -519,7 +519,7 @@ export default function CounterApp({ token }: { token: string }) {
         {screen === 'select-shelf' && (
           <>
             <BackButton label="通路選択に戻る" onClick={() => setScreen('select-aisle')} dark={dm} />
-            <DrillHeader title="棚を選択" sub={`${building}棟 ${aisle}通路`} dark={dm} />
+            <DrillHeader title="棚を選択" sub={`${building}エリア ${aisle}通路`} dark={dm} />
             <div className="space-y-2">
               {shelfList.map(s => {
                 const isPending       = s.pendingRecountCount > 0 && s.completedItems === s.totalItems;

@@ -22,7 +22,7 @@ export interface MasterItem {
   id: string;             // Firestore doc id
   sessionId: string;
   location: string;       // 2X-13-05-2-3
-  locationKey: string;    // 棟-通路-棚 の3階層キー: 2X-13-05
+  locationKey: string;    // エリア-通路-棚 の3階層キー: 2X-13-05
   building: string;       // 2X
   aisle: string;          // 13
   shelf: string;          // 05
