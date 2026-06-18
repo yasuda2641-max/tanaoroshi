@@ -582,7 +582,7 @@ export default function CounterApp({ token }: { token: string }) {
                   <div
                     key={item.id}
                     onClick={() => openItem(item)}
-                    className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors
+                    className={`border rounded-xl px-4 py-5 flex items-center gap-3 cursor-pointer transition-colors
                       ${unrecounted
                         ? dm ? 'bg-amber-950/40 border-amber-900/60 active:bg-amber-950/60' : 'bg-amber-50 border-amber-200 active:bg-amber-100'
                         : recountedWithDiff
@@ -825,7 +825,7 @@ function DrillItem({ label, badge, badgeColor, progress, isCompleted, isPending,
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl px-4 py-3.5 flex items-center justify-between cursor-pointer transition-all
+      className={`rounded-xl px-4 py-5 flex items-center justify-between cursor-pointer transition-all
         ${isCompleted
           ? 'bg-emerald-500 border border-emerald-500 active:bg-emerald-600'
           : isPending
