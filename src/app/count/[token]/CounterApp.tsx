@@ -117,6 +117,27 @@ export default function CounterApp({ token }: { token: string }) {
     setScreen('select-building');
   }
 
+  async function reloadShelf() {
+    if (!session || !shelfKey) return;
+    const [all, recs] = await Promise.all([
+      getMasterItems(session.id),
+      getCountRecords(session.id),
+    ]);
+    const shelfItems = all.filter(i => i.locationKey === shelfKey);
+    const shelfItemIds = new Set(shelfItems.map(i => i.id));
+    setItems(shelfItems);
+    const map = new Map(
+      recs
+        .filter(r => shelfItemIds.has(r.masterItemId))
+        .map(r => [r.masterItemId, {
+          diff: r.diff,
+          isRecounted: r.isRecounted ?? false,
+          isAdded: r.isAdded ?? false,
+        }])
+    );
+    setCounted(map);
+  }
+
   function selectBuilding(b: string) { setBuilding(b); setScreen('select-aisle'); }
   function selectAisle(a: string)    { setAisle(a); setScreen('select-shelf'); }
   async function selectShelf(s: ShelfProgress) {
@@ -402,7 +423,10 @@ export default function CounterApp({ token }: { token: string }) {
                 </button>
               )}
               <button
-                onClick={() => setScreen(allDone ? 'shelf-complete' : 'item-list')}
+                onClick={async () => {
+                  await reloadShelf();
+                  setScreen(allDone ? 'shelf-complete' : 'item-list');
+                }}
                 className={`w-full py-4 font-bold text-base rounded-xl active:scale-[0.98] transition-transform
                   ${dm ? 'bg-amber-500 text-white' : 'bg-stone-900 text-white'}`}
               >
